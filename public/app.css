@@ -214,9 +214,9 @@ html{-webkit-text-size-adjust:100%}:root{color-scheme:light;padding-top:env(safe
 
   /* ───────── Invitation (printed piece; one look per occasion) ───────── */
   .inv {
-    --script: "Pinyon Script", "Snell Roundhand", cursive;
-    --display: "Bodoni Moda", "Didot", Georgia, serif;
-    --body: "Cormorant Garamond", Garamond, Georgia, serif;
+    --script: "Allura", "Snell Roundhand", cursive;
+    --display: "Marcellus", "Trajan Pro", Georgia, serif;
+    --body: "EB Garamond", Garamond, Georgia, serif;
     --page: #fbfaf6; --paper: #ece7dc; --paper-alt: #e6e0d2; --ink: #3d3b35; --ink-soft: #77736a; --accent: #6f7b4f; --accent-ink: #fbfaf6;
     --line: #d8d3c6; --ground: #ebe7df; --foil-a: #7a5a26; --foil-b: #e9d394; --body-size: 1.15rem; --caps-track: .14em; --caps-weight: 400;
     color-scheme: light;
@@ -384,6 +384,12 @@ html{-webkit-text-size-adjust:100%}:root{color-scheme:light;padding-top:env(safe
   .inv .record { aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle, #ead2c4 0 17%, #d9bba9 17.4% 18%, transparent 18.5%), conic-gradient(from 20deg, rgba(255,255,255,0) 0deg, rgba(255,255,255,.2) 22deg, rgba(255,255,255,0) 55deg, rgba(255,255,255,0) 180deg, rgba(255,255,255,.14) 205deg, rgba(255,255,255,0) 238deg), repeating-radial-gradient(circle, #171614 0 1.5px, #262522 1.5px 2.5px, #1c1b19 2.5px 3px), #191817; box-shadow: 0 2px 3px rgba(0,0,0,.3), 0 14px 22px -10px rgba(0,0,0,.6); }
   .inv .record.spin { animation: spin 3.2s linear infinite; }
   @keyframes spin { to { rotate: 360deg; } }
+  .inv .emblem.record.cue { animation: cue .55s ease-in-out infinite alternate; }
+  .inv .emblem.record.spin, .inv .emblem.record.spin.pop { animation: spin 3.2s linear infinite; }
+  @keyframes cue { from { opacity: 1; } to { opacity: .6; } }
+  .inv .song-hint { margin-top: 34px; font-style: italic; font-size: .95rem; color: var(--ink-soft); }
+  .inv .song-player { width: 100%; max-width: 380px; margin-top: 34px; display: grid; justify-items: center; }
+  .inv .song-player iframe { display: block; width: 100%; border: 0; border-radius: 12px; box-shadow: 0 10px 18px -12px rgba(40, 32, 15, .5); }
   .inv .emblem-label { position: absolute; right: 4%; bottom: -10%; font-family: var(--script); font-size: 1.4rem; color: var(--ink-soft); }
   .inv .rosette { position: relative; display: block; }
   .inv .rosette span { position: absolute; left: 0; right: 0; top: 24%; text-align: center; font-family: var(--display); font-weight: 600; font-size: clamp(1.4rem, 7vw, 2.2rem); color: #fff8e8; text-shadow: 0 1px 1px rgba(90, 60, 20, .6), 0 -1px 0 rgba(255, 245, 210, .4); }
@@ -423,8 +429,8 @@ html{-webkit-text-size-adjust:100%}:root{color-scheme:light;padding-top:env(safe
   .inv .story-top .left .side-art { width: 46px; }
   .inv .story-top .left .emb { width: 88px; }
   .inv .story-top .left .emb.cloud { width: 120px; }
-  .inv .story p.tale { font-family: var(--script); font-size: 1.45rem; line-height: 1.4; color: var(--ink); white-space: pre-line; }
-  .inv:not([data-occasion="wedding"]) .story p.tale { font-family: var(--body); font-size: 1.05rem; line-height: 1.65; }
+  .inv .story p.tale { font-family: var(--body); font-style: italic; font-size: 1.2rem; line-height: 1.6; color: var(--ink); white-space: pre-line; }
+  .inv:not([data-occasion="wedding"]) .story p.tale { font-style: normal; font-size: 1.05rem; line-height: 1.65; }
 
   /* Timeline */
   .inv .timeline { list-style: none; margin: 0; padding: 0; display: grid; position: relative; width: 100%; max-width: 330px; }
@@ -491,6 +497,55 @@ html{-webkit-text-size-adjust:100%}:root{color-scheme:light;padding-top:env(safe
   .inv[data-occasion="reveal"] .closing .envelope-still .env-bottom { background: linear-gradient(0deg, #edf2f8, #f5f8fb), var(--grain); background-blend-mode: multiply; }
   .inv .closing .envelope-still .flora { width: 70%; left: 15%; top: -10%; z-index: 1; }
   .inv .closing .envelope-still .seal { top: 64%; cursor: default; }
+  /* Wedding envelope: pearl paper, a foil-printed liner and gold foil edges */
+  .inv[data-occasion="wedding"] {
+    --gold: linear-gradient(105deg, #8f6c2c 0%, #d9bd77 14%, #fff4cf 24%, #e3c886 34%, #a07a35 52%, #dcc07a 68%, #fff4cf 78%, #b48d45 100%);
+  }
+  .inv[data-occasion="wedding"] .envelope::before, .inv[data-occasion="wedding"] .closing .envelope-still::before {
+    content: ""; position: absolute; inset: -2px; border-radius: 6px; background: var(--gold); background-size: 200% 100%;
+    box-shadow: 0 2px 3px rgba(60, 50, 30, .14), 0 22px 30px -16px rgba(60, 50, 30, .4); animation: foil 7s ease-in-out infinite alternate;
+  }
+  .inv[data-occasion="wedding"] .env-back { box-shadow: none; }
+  .inv[data-occasion="wedding"] .env-back, .inv[data-occasion="wedding"] .closing .envelope-still .env-back { background: linear-gradient(180deg, #e6dcc6, #f1eadb 60%), var(--grain); background-blend-mode: multiply; }
+  /* the gold lattice liner only shows once the envelope is open */
+  .inv[data-occasion="wedding"] .env-back::after {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; opacity: 0; transition: opacity .5s ease .35s;
+    background: repeating-linear-gradient(45deg, transparent 0 10px, rgba(168, 130, 62, .34) 10px 11px), repeating-linear-gradient(-45deg, transparent 0 10px, rgba(168, 130, 62, .34) 10px 11px);
+  }
+  .inv[data-occasion="wedding"] .opener.open .env-back::after, .inv[data-occasion="wedding"] .closing .envelope-still .env-back::after { opacity: 1; }
+  .inv[data-occasion="wedding"] .env-front { background: linear-gradient(to top right, #efe9dc 49.6%, transparent 50%) left / 50.5% 100% no-repeat, linear-gradient(to top left, #e9e2d3 49.6%, transparent 50%) right / 50.5% 100% no-repeat; }
+  .inv[data-occasion="wedding"] .env-bottom, .inv[data-occasion="wedding"] .closing .envelope-still .env-bottom { background: linear-gradient(0deg, #f3eee2, #f8f5ec), var(--grain); background-blend-mode: multiply; }
+  .inv[data-occasion="wedding"] .flap { background: linear-gradient(180deg, #f8f4ea, #ebe4d4), var(--grain); background-blend-mode: multiply; }
+  .inv[data-occasion="wedding"] .collage .env-mini { background: linear-gradient(0deg, #f0eade, #f7f3ea), var(--grain); background-blend-mode: multiply; }
+  .inv[data-occasion="wedding"] .flap::before, .inv[data-occasion="wedding"] .flap::after,
+  .inv[data-occasion="wedding"] .env-bottom::before, .inv[data-occasion="wedding"] .env-bottom::after,
+  .inv[data-occasion="wedding"] .collage .env-mini::before, .inv[data-occasion="wedding"] .collage .env-mini::after {
+    content: ""; position: absolute; inset: 0; background: var(--gold); background-size: 200% 100%; animation: foil 7s ease-in-out infinite alternate;
+  }
+  /* each edge gets a foil band (::after) and a hairline just inside it (::before) */
+  .inv[data-occasion="wedding"] .flap::after { clip-path: polygon(0 0, 50% 100%, 100% 0, 98.6% 0, 50% 97.2%, 1.4% 0); }
+  .inv[data-occasion="wedding"] .flap::before { clip-path: polygon(3.5% 0, 50% 93%, 96.5% 0, 96% 0, 50% 92%, 4% 0); }
+  .inv[data-occasion="wedding"] .env-bottom::after { clip-path: polygon(0 100%, 50% 48%, 100% 100%, 98.6% 100%, 50% 49.46%, 1.4% 100%); }
+  .inv[data-occasion="wedding"] .env-bottom::before { clip-path: polygon(3.5% 100%, 50% 51.64%, 96.5% 100%, 96% 100%, 50% 52.16%, 4% 100%); }
+  .inv[data-occasion="wedding"] .closing .envelope-still .env-bottom::after { clip-path: polygon(0 30%, 50% 62%, 100% 30%, 100% 31.3%, 50% 63.3%, 0 31.3%); }
+  .inv[data-occasion="wedding"] .closing .envelope-still .env-bottom::before { clip-path: polygon(0 33.3%, 50% 65.3%, 100% 33.3%, 100% 33.8%, 50% 65.8%, 0 33.8%); }
+  .inv[data-occasion="wedding"] .collage .env-mini::after { clip-path: polygon(0 18%, 50% 52%, 100% 18%, 100% 20%, 50% 54%, 0 20%); }
+  .inv[data-occasion="wedding"] .collage .env-mini::before { clip-path: polygon(0 22.4%, 50% 56.4%, 100% 22.4%, 100% 23%, 50% 57%, 0 23%); }
+  .inv[data-occasion="wedding"] .letter::before { content: ""; position: absolute; inset: 6px; border: 1px solid #c9a961; border-image: var(--gold) 1; pointer-events: none; }
+  .inv[data-occasion="wedding"] .seal .art { filter: drop-shadow(0 2px 2px rgba(80, 55, 20, .4)); }
+  .inv[data-occasion="wedding"] .link-btn { border-bottom: 1.5px solid #b48d45; border-image: var(--gold) 1; }
+  /* wedding type: slightly larger small caps so the roman capitals stay easy to read */
+  .inv[data-occasion="wedding"] .eyebrow { font-size: .76rem; letter-spacing: .26em; }
+  .inv[data-occasion="wedding"] .link-btn { font-size: .82rem; letter-spacing: .2em; }
+  .inv[data-occasion="wedding"] .link-btn:hover { letter-spacing: .25em; }
+  .inv[data-occasion="wedding"] .letter small { font-size: .68rem; letter-spacing: .2em; }
+  .inv[data-occasion="wedding"] .closing .love { font-size: 1.7rem; }
+  /* numerals in the serif text face with lining figures: the display face only has old-style ones */
+  .inv[data-occasion="wedding"] .cover .date, .inv[data-occasion="wedding"] .closing .date, .inv[data-occasion="wedding"] .datecard .d, .inv[data-occasion="wedding"] .datecard .y,
+  .inv[data-occasion="wedding"] .clock b, .inv[data-occasion="wedding"] .timeline .what span { font-family: var(--body); font-variant-numeric: lining-nums tabular-nums; }
+  .inv[data-occasion="wedding"] .cover .date, .inv[data-occasion="wedding"] .closing .date { font-size: 1.2rem; }
+  .inv[data-occasion="wedding"] .clock span { font-size: .6rem; letter-spacing: .14em; }
+
   .inv .closing .thank { font-style: italic; color: var(--ink-soft); white-space: pre-line; }
   .inv .closing .love { font-size: 1.25rem; }
   .inv .closing .sig { font-family: var(--script); font-size: clamp(2.5rem, 10.5vw, 3.2rem); line-height: 1.15; overflow-wrap: anywhere; }

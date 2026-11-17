@@ -16,8 +16,8 @@ for n in NAMES:
     p = os.path.join(ART, n + '.webp'); w, h = Image.open(p).size
     rules.append('.art-%s{aspect-ratio:%d/%d;--img:url("%s");background-image:var(--img)}' % (n, w, h, uri(p)))
 css += '\n' + '\n'.join(rules)
-FONTS = ('https://fonts.googleapis.com/css2?family=Pinyon+Script&family=Bodoni+Moda:opsz,wght@6..96,400;6..96,500'
-  '&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400'
+FONTS = ('https://fonts.googleapis.com/css2?family=Pinyon+Script&family=Allura&family=Marcellus'
+  '&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400'
   '&family=Parisienne&family=Jost:wght@300;400;500&family=Quicksand:wght@400;500;600&family=Dancing+Script:wght@500;600'
   '&family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Great+Vibes&family=Cinzel:wght@400;500;600&family=Zilla+Slab:wght@500;600'
   '&family=Pacifico&family=Bitter:wght@400;500;600&family=Caveat:wght@500;600&display=swap')

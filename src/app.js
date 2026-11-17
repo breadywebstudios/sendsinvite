@@ -9,10 +9,10 @@
   /* ───────── Occasion themes ───────── */
   var THEMES = {
     wedding: {
-      label: 'Wedding', blurb: 'Ivory cotton paper, white ranunculus, a gold wax seal and an envelope that opens.',
+      label: 'Wedding', blurb: 'Ivory cotton paper, white ranunculus, a gold wax seal and a gold-edged envelope that opens.',
       dot: '#6f7b4f', opener: 'envelope', particles: 'petals', closingEnvelope: true,
       art: { corner: 'cluster', top: 'garland', side: 'sprig', hang: 'strand', emblem: 'seal' },
-      vars: { ground: '#ebe7df', script: '"Pinyon Script", cursive', display: '"Bodoni Moda", Georgia, serif', ink: '#3d3b35', inkSoft: '#77736a' },
+      vars: { ground: '#ebe7df', script: '"Allura", cursive', display: '"Marcellus", Georgia, serif', ink: '#3d3b35', inkSoft: '#77736a' },
       words: {
         open: 'View the invitation', letter: 'You are invited', toLine: 'To the wedding of', save: ['Save', 'The', 'Date'],
         story: ['Our story', 'How it all began'], details: ['The details', "Here's what to expect"], when: ['Ceremony', 'Reception'],
@@ -403,6 +403,24 @@
     return ' data-custom style="--pl:' + light + ';--pd:' + dark + ';--pa:' + accent + ';--p2:' + second + ';--p3:' + third + ';--pink:' + darkInk + '"';
   }
 
+  /* ───────── Song: a Spotify link the host pastes; the record on the wedding collage plays it ───────── */
+  function spotifyRef(link) {
+    var m = /^\s*(?:https?:\/\/open\.spotify\.com\/(?:intl-[a-z-]+\/)?(?:embed\/)?|spotify:)(track|album|playlist|episode)[\/:]([A-Za-z0-9]{10,40})/i.exec(String(link || ''));
+    return m ? { kind: m[1].toLowerCase(), id: m[2], uri: 'spotify:' + m[1].toLowerCase() + ':' + m[2], url: 'https://open.spotify.com/' + m[1].toLowerCase() + '/' + m[2] } : null;
+  }
+  var spotifyApi = null, spotifyWait = null;
+  function loadSpotify(ok, fail) {
+    if (spotifyApi) { ok(spotifyApi); return; }
+    if (spotifyWait) { spotifyWait.push([ok, fail]); return; }
+    spotifyWait = [[ok, fail]];
+    function settle(api) { var w = spotifyWait || []; spotifyWait = null; spotifyApi = api; w.forEach(function (p) { try { (api ? p[0] : p[1])(api); } catch (e) {} }); }
+    var timer = setTimeout(function () { if (spotifyWait) settle(null); }, 12000);
+    window.onSpotifyIframeApiReady = function (api) { clearTimeout(timer); if (spotifyWait) settle(api); else spotifyApi = api; };
+    var sc = document.createElement('script'); sc.src = 'https://open.spotify.com/embed/iframe-api/v1'; sc.async = true;
+    sc.onerror = function () { clearTimeout(timer); sc.remove(); if (spotifyWait) settle(null); };
+    document.head.appendChild(sc);
+  }
+
   /* ───────── Invitation markup ───────── */
   function flora(cls, art, extra) { return '<div class="flora ' + cls + '"' + (extra || '') + '><i class="art art-' + art + '"></i></div>'; }
   function clipSvg(right) {
@@ -413,7 +431,7 @@
       : '<div class="img ph"><span>Your photo</span></div>';
   }
   function emblemCollage(inv, th) {
-    if (inv.occasion === 'wedding') return '<button class="emblem record" type="button" data-act="emblem" aria-label="Spin our song" aria-pressed="false"></button><span class="emblem-label"><small style="font-family:var(--display);font-size:.5rem;letter-spacing:.2em;text-transform:uppercase;margin-right:4px">our</small>Song</span>';
+    if (inv.occasion === 'wedding') return '<button class="emblem record" type="button" data-act="emblem" aria-label="' + (spotifyRef(inv.song) ? 'Play our song' : 'Spin our song') + '" aria-pressed="false"></button><span class="emblem-label"><small style="font-family:var(--display);font-size:.5rem;letter-spacing:.2em;text-transform:uppercase;margin-right:4px">our</small>Song</span>';
     if (inv.occasion === 'birthday') return '<button class="emblem" type="button" data-act="emblem" aria-label="Celebrate"><span class="rosette"><i class="art art-bd-rosette"></i><span>' + esc(inv.age || '★') + '</span></span></button>';
     if (inv.occasion === 'reveal') return '<button class="emblem" type="button" data-act="emblem" aria-label="Boy or girl?"><span class="cloudq"><i class="art art-gr-cloud"></i><span>?</span></span></button>';
     return '<button class="emblem" type="button" data-act="emblem" aria-label="Celebrate"><span class="medal"><i class="art art-' + th.art.emblem + '"></i></span></button>';
@@ -460,7 +478,8 @@
       '<div class="collage"><div class="photo">' + photoBox(inv.photos && inv.photos.cover, names) + '</div>',
       '<div class="datecard"><span class="m">' + (d ? MONTHS[d.getMonth()].toUpperCase() : 'SOON') + '</span><span class="d">' + (d ? d.getDate() : '…') + '</span><span class="y">' + (d ? d.getFullYear() : '') + '</span></div>',
       '<div class="env-mini"></div>', emblemCollage(inv, th),
-      flora('a', a.corner), flora('b' + (occ === 'wedding' ? '' : ' float'), side2), '</div></section>');
+      flora('a', a.corner), flora('b' + (occ === 'wedding' ? '' : ' float'), side2), '</div>',
+      (occ === 'wedding' && spotifyRef(inv.song)) ? '<p class="song-hint">Tap the record to play our song</p><div class="song-player" data-song hidden><div></div></div>' : '', '</section>');
 
     // 3 Countdown
     h.push('<section class="block countdown" data-sec="count"><div class="heading"><h2 class="caps">' + esc(w.countdown[0]) + '</h2><span class="script">' + esc(w.countdown[1]) + '</span></div>',
@@ -688,10 +707,51 @@
       setTimeout(scrollToHero, REDUCE ? 0 : 1750);
     }
 
+    // Song: the record starts the Spotify player and spins only while music is playing
+    var song = { ref: inv.occasion === 'wedding' ? spotifyRef(inv.song) : null, ctrl: null, loading: false, failed: false, dead: false };
+    cleanups.push(function () { song.dead = true; clearTimeout(song.nudge); if (song.ctrl) { try { song.ctrl.destroy(); } catch (e) {} song.ctrl = null; } });
+    function setSpin(btn, on) { btn.classList.toggle('spin', on); btn.setAttribute('aria-pressed', on ? 'true' : 'false'); }
+    function record(btn) {
+      var holder = $('[data-song]', root);
+      if (!song.ref || !holder || song.failed) { setSpin(btn, !btn.classList.contains('spin')); return; }
+      if (song.ctrl) { song.ctrl.togglePlay(); if (song.nudgeFn) song.nudgeFn(); return; }
+      if (song.loading) return;
+      song.loading = true; btn.classList.add('cue'); holder.hidden = false;
+      var hint = $('.song-hint', root); if (hint) hint.hidden = true;
+      // Some browsers (Safari on iPhone) only start music from a tap inside the player itself: point the guest at it
+      function nudge() {
+        clearTimeout(song.nudge);
+        song.nudge = setTimeout(function () { var h = $('.song-hint', root); if (song.dead || song.playing || song.failed || !h) return; h.textContent = 'Press play on the player below'; h.hidden = false; }, 1800);
+      }
+      song.nudgeFn = nudge;
+      function fallback() {
+        if (song.dead) return;
+        song.failed = true; song.loading = false; btn.classList.remove('cue');
+        holder.innerHTML = '<a class="btn" href="' + esc(song.ref.url) + '" target="_blank" rel="noopener">Listen on Spotify</a>';
+      }
+      loadSpotify(function (api) {
+        if (song.dead) return;
+        try {
+          api.createController(holder.firstElementChild, { uri: song.ref.uri, width: '100%', height: song.ref.kind === 'track' || song.ref.kind === 'episode' ? 80 : 152 }, function (ctrl) {
+            if (song.dead) { try { ctrl.destroy(); } catch (e) {} return; }
+            song.ctrl = ctrl; song.loading = false;
+            // if the player never comes alive (blocked frame, offline), fall back to a plain link
+            var watchdog = setTimeout(function () { if (song.dead) return; try { ctrl.destroy(); } catch (e) {} song.ctrl = null; setSpin(btn, false); fallback(); }, 10000);
+            ctrl.addListener('playback_update', function (e) {
+              var d = (e && e.data) || {}; clearTimeout(watchdog); btn.classList.remove('cue');
+              song.playing = d.isPaused === false; setSpin(btn, song.playing);
+              if (song.playing) { clearTimeout(song.nudge); var h = $('.song-hint', root); if (h) h.hidden = true; }
+            });
+            ctrl.addListener('ready', function () { clearTimeout(watchdog); btn.classList.remove('cue'); try { ctrl.play(); } catch (e) {} nudge(); });
+          });
+        } catch (e) { fallback(); }
+      }, fallback);
+    }
+
     // Emblem taps
     function emblem(btn) {
       btn.classList.remove('pop'); void btn.offsetWidth; btn.classList.add('pop');
-      if (btn.classList.contains('record')) { var on = btn.classList.toggle('spin'); btn.setAttribute('aria-pressed', on ? 'true' : 'false'); return; }
+      if (btn.classList.contains('record')) { record(btn); return; }
       var r = btn.getBoundingClientRect(); fx.burst(r.left + r.width / 2, r.top + r.height / 3, th.particles === 'petals' ? 'confetti' : th.particles, 50);
     }
 
@@ -935,6 +995,10 @@
   }
 
   /* Editor */
+  function songHint(link) {
+    if (String(link || '').trim() && !spotifyRef(link)) return '<b>That does not look like a Spotify link.</b> In Spotify, open the song, choose Share, then Copy song link, and paste it here.';
+    return 'In Spotify, open the song, choose Share, then Copy song link, and paste it here. Guests tap the record (or the play button on the player) to play it, and the record spins while the music plays. Guests who are not signed in to Spotify hear a short preview.';
+  }
   function fieldHtml(label, name, val, type, extra) {
     if (type === 'textarea') return '<label class="fld"><span>' + esc(label) + '</span><textarea data-f="' + name + '"' + (extra || '') + '>' + esc(val) + '</textarea></label>';
     return '<label class="fld"><span>' + esc(label) + '</span><input type="' + (type || 'text') + '" data-f="' + name + '" value="' + esc(val) + '"' + (extra || '') + '></label>';
@@ -959,6 +1023,8 @@
     if (d.occasion === 'birthday') h.push('<div class="row">' + fieldHtml('Age they are turning (optional)', 'age', d.age, 'text', ' maxlength="3" inputmode="numeric"') + '</div>');
     h.push('<div class="row">' + fieldHtml('Small line above the names', 'eyebrow', d.eyebrow) + fieldHtml('Opening line', 'heroLine', d.heroLine) + '</div>',
       fieldHtml('Invitation wording', 'inviteLine', d.inviteLine, 'textarea'), '</section>');
+    if (d.occasion === 'wedding') h.push('<section class="sec"><h2>Our song</h2>', fieldHtml('Spotify link to your song (optional)', 'song', d.song || '', 'url', ' placeholder="https://open.spotify.com/track/…"'),
+      '<p class="hint" data-song-hint>' + songHint(d.song) + '</p>', '</section>');
     h.push('<section class="sec"><h2>When and where</h2><div class="row">' + fieldHtml('Date', 'date', d.date, 'date') + fieldHtml('Start time', 'time', d.time, 'time') + fieldHtml('Reply by', 'rsvpBy', d.rsvpBy, 'date') + '</div>',
       '<div class="row">' + fieldHtml('Venue', 'venue', d.venue) + fieldHtml('Street address', 'address', d.address) + fieldHtml('City and region', 'city', d.city) + '</div>',
       photoField('map', 'Map of your street', d) + '<p class="hint">To show your real street on the venue card: open your venue in Google Maps, take a screenshot, and upload it here. Guests tap it to open Google Maps. <button class="text-link" type="button" data-map-search>Open your venue in Google Maps</button></p>',
@@ -1331,7 +1397,7 @@
   document.addEventListener('input', function (e) {
     if (!S.draft || S.route.view !== 'edit') return;
     var t = e.target, f = t.getAttribute('data-f');
-    if (f) { S.draft[f] = t.type === 'number' ? Number(t.value) : t.value; if (f === 'headline') { var h1 = $('.s-h1'); if (h1) h1.textContent = t.value || 'Untitled'; } changed(false); return; }
+    if (f) { S.draft[f] = t.type === 'number' ? Number(t.value) : t.value; if (f === 'headline') { var h1 = $('.s-h1'); if (h1) h1.textContent = t.value || 'Untitled'; } if (f === 'song') { var sh = $('[data-song-hint]'); if (sh) sh.innerHTML = songHint(t.value); } changed(false); return; }
     if (t.hasAttribute('data-s')) { var i = Number(t.getAttribute('data-s')); S.draft.schedule[i][t.getAttribute('data-k')] = t.value; changed(false); return; }
     if (t.hasAttribute('data-color')) { S.draft.colors[Number(t.getAttribute('data-color'))] = t.value; changed(false); }
   });

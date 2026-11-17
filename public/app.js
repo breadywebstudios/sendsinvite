@@ -452,6 +452,15 @@
     return '<span class="mono-seal"><i class="art art-seal-blank"></i><span class="mono" aria-hidden="true">' + esc(m.a) + (m.b ? '<i>&amp;</i>' + esc(m.b) : '') + '</span></span>';
   }
   function sealArt(inv, a) { return inv.occasion === 'wedding' ? weddingSeal(inv) : '<i class="art art-' + (a.seal || 'seal') + '"></i>'; }
+  /* A gold calligraphy flourish. Under animation its stroke is drawn in like a pen line (see .flourish in app.css). */
+  var flourishN = 0;
+  function flourish(cls) {
+    var g = 'fl-g' + (++flourishN);
+    return '<svg class="flourish ' + cls + '" viewBox="0 0 240 40" aria-hidden="true" focusable="false"><defs><linearGradient id="' + g + '" x1="0" y1="0" x2="1" y2="0">' +
+      '<stop offset="0" style="stop-color:var(--foil-a)"/><stop offset=".35" style="stop-color:var(--foil-b)"/><stop offset=".65" style="stop-color:var(--foil-a)"/><stop offset="1" style="stop-color:var(--foil-b)"/></linearGradient></defs>' +
+      '<path pathLength="1" fill="none" stroke="url(#' + g + ')" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M6 24C34 24 58 12 88 18C106 22 112 33 102 34C91 35 94 16 120 13C146 16 149 35 138 34C128 33 134 22 152 18C182 12 206 24 234 24"/>' +
+      '<path pathLength="1" fill="none" stroke="url(#' + g + ')" stroke-width="1" stroke-linecap="round" d="M108 6C113 2 118 4 120 9C122 4 127 2 132 6C136 10 128 16 120 21C112 16 104 10 108 6Z"/></svg>';
+  }
   function storyEmblem(inv) {
     if (inv.occasion === 'wedding') return '<div class="emb">' + weddingSeal(inv) + '</div>';
     if (inv.occasion === 'birthday') return '<div class="emb"><span class="rosette"><i class="art art-bd-rosette"></i><span>' + esc(inv.age || '★') + '</span></span></div>';
@@ -522,13 +531,15 @@
     var mile = occ === 'wedding' ? [['We met', inv.storyMet], ['The proposal', inv.storyProposal]].filter(function (x) { return String(x[1] || '').trim(); }) : [];
     if (inv.story || (inv.photos && inv.photos.story) || mile.length) {
       h.push('<section class="block" data-sec="story"><div class="heading"><h2 class="caps">' + esc(w.story[0]) + '</h2><span class="script">' + esc(w.story[1]) + '</span></div>',
-        '<div class="paper story"><div class="story-top"><div class="left"><i class="art art-' + a.side + ' side-art" aria-hidden="true"></i>' + storyEmblem(inv) + '</div>',
-        '<div class="photo">' + photoBox(inv.photos && inv.photos.story, names) + '</div></div>',
+        '<div class="paper story"><div class="story-top">' + flora('st-flora', a.corner) + flora('st-side', a.side),
+        '<div class="photo' + (inv.storyMet ? ' captioned' : '') + '">' + photoBox(inv.photos && inv.photos.story, names) + (inv.storyMet ? '<span class="ph-cap">' + esc(inv.storyMet) + '</span>' : '') + '</div>',
+        storyEmblem(inv), '<i class="spark s1" aria-hidden="true"></i><i class="spark s2" aria-hidden="true"></i><i class="spark s3" aria-hidden="true"></i><i class="spark s4" aria-hidden="true"></i></div>',
+        flourish('f-mid'),
         inv.story ? '<p class="tale">' + esc(inv.story) + '</p>' : '',
         mile.length ? '<ol class="milestones">' + mile.concat([['The wedding', [d ? fmtDots(d) : '', inv.city].filter(Boolean).join(' · ')]]).map(function (x, i, all) {
           return '<li' + (i === all.length - 1 ? ' class="now"' : '') + '><span class="ms-dot" aria-hidden="true"></span><span class="ms-k">' + esc(x[0]) + '</span><span class="ms-v">' + esc(x[1]) + '</span></li>';
         }).join('') + '</ol>' : '',
-        (occ === 'wedding' && inv.story) ? '<p class="tale-sign">' + esc(inv.nameA && inv.nameB ? inv.nameA + ' & ' + inv.nameB : names) + '</p>' : '', '</div></section>');
+        (occ === 'wedding' && inv.story) ? '<p class="tale-sign"><span class="foil">' + esc(inv.nameA && inv.nameB ? inv.nameA + ' & ' + inv.nameB : names) + '</span></p>' + flourish('f-sign') : '', '</div></section>');
     }
 
     // 6 Timeline
@@ -792,7 +803,7 @@
     if (animated) {
       var tag = function (sel, cls) { $$(sel, root).forEach(function (el) { el.classList.add(cls); }); };
       tag('.block:not(.cover) .paper, .heading .caps, .timeline li, .closing > p:not(.sig), .closing hr, .tale, form[data-rsvp] > *', 'rv');
-      tag('.heading .script, .hero-line, .std .the, .info .script, .rsvp-head .script, .closing .sig', 'rv-write');
+      tag('.heading .script, .hero-line, .std .the, .info .script, .rsvp-head .script, .closing .sig, .story .tale-sign', 'rv-write');
       $$('.timeline', root).forEach(function (tl) { $$('li', tl).forEach(function (li, i) { li.style.setProperty('--d', (i * .14).toFixed(2) + 's'); }); });
       $$('form[data-rsvp] > *', root).forEach(function (el, i) { el.style.setProperty('--d', (i * .07).toFixed(2) + 's'); });
       $$('.cover .flora', root).forEach(function (f, i) { f.style.setProperty('--d', (1.1 + i * .3) + 's'); });

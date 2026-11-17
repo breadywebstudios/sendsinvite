@@ -22,9 +22,12 @@
         headline: 'Emma & Oliver', nameA: 'Emma', nameB: 'Oliver', eyebrow: 'Save our date', heroLine: 'You are invited',
         inviteLine: 'request the pleasure of your company as they celebrate their marriage',
         time: '16:00', venue: 'Villa di Belvedere', address: 'Via di Belvedere, 1', city: 'Florence, Italy',
-        story: 'We met in the most unexpected way and instantly knew there was something special. Through every season, our adventure together just keeps getting better.',
+        story: 'It started with a borrowed umbrella on a rainy afternoon in Lisbon. One coffee became dinner, dinner became a weekend, and somewhere along the way we stopped counting.\n\nNow we would love you there as we say yes to forever.',
+        storyMet: 'Lisbon, spring 2019', storyProposal: 'Amalfi Coast, summer 2025',
         schedule: [['16:00', 'Ceremony', 'rings'], ['17:00', 'Cocktail hour', 'glasses'], ['17:30', 'Dinner', 'dinner'], ['18:00', 'Speeches', 'mic'], ['20:00', 'First dance', 'music'], ['22:00', 'Dancing', 'sparkle']],
-        dress: 'Semi formal', dressNote: "We'd love to see you in soft garden tones.", colors: ['#f5f2ea', '#e2dccd', '#a9b086', '#6f7b4f', '#4b5532'],
+        dress: 'Semi formal', dressNote: "We'd love to see you in soft blues, sage and ivory.", colors: ['#f7f4ee', '#dbe4ec', '#7d9fc3', '#86a79b', '#2f4a73'],
+        /* the palette invitations were made with before the watercolour artwork: still counts as the theme's own */
+        oldColors: [['#f5f2ea', '#e2dccd', '#a9b086', '#6f7b4f', '#4b5532']],
         travel: 'The nearest airport is Florence (FLR). Transportation will be provided to and from the venue.',
         gifts: 'Your presence at our celebration is the greatest gift of all. If you would like to give us something, we have a small registry for our home.',
         question: 'Please select your meal preference', options: 'Chicken, Beef, Vegetarian', maxGuests: 4,
@@ -376,7 +379,7 @@
       occasion: occasion, headline: d.headline, nameA: d.nameA, nameB: d.nameB, age: d.age || '',
       eyebrow: d.eyebrow, heroLine: d.heroLine, inviteLine: d.inviteLine,
       date: iso(when), time: d.time, venue: d.venue, address: d.address, city: d.city, rsvpBy: iso(rsvp),
-      story: d.story, schedule: d.schedule.map(function (s) { return { time: s[0], label: s[1], icon: s[2] }; }),
+      story: d.story, storyMet: d.storyMet || '', storyProposal: d.storyProposal || '', schedule: d.schedule.map(function (s) { return { time: s[0], label: s[1], icon: s[2] }; }),
       dress: d.dress, dressNote: d.dressNote, colors: d.colors.slice(), travel: d.travel, gifts: d.gifts, giftsUrl: '',
       question: d.question, options: d.options, maxGuests: d.maxGuests, thanks: d.thanks, contact: '',
       photos: { cover: (themePhotos(occasion)[0] || [''])[0], story: (themePhotos(occasion)[1] || [''])[0] }, createdAt: Date.now(), updatedAt: Date.now()
@@ -391,7 +394,8 @@
   function sat(c) { var mx = Math.max.apply(null, c), mn = Math.min.apply(null, c); return mx === 0 ? 0 : (mx - mn) / mx * (1 - Math.abs(lum(c) - .5)); }
   function paletteAttrs(inv) {
     var th = THEMES[inv.occasion] || THEMES.wedding, cols = (inv.colors || []).filter(hexRgb);
-    if (cols.length < 2 || cols.join().toLowerCase() === th.defaults.colors.join().toLowerCase()) return '';
+    var key = cols.join().toLowerCase();
+    if (cols.length < 2 || key === th.defaults.colors.join().toLowerCase() || (th.defaults.oldColors || []).some(function (o) { return o.join().toLowerCase() === key; })) return '';
     var byL = cols.slice().sort(function (a, b) { return lum(hexRgb(b)) - lum(hexRgb(a)); });
     var light = byL[0], dark = byL[byL.length - 1];
     var mids = cols.filter(function (c) { return c !== light && c !== dark; });
@@ -435,8 +439,21 @@
     if (inv.occasion === 'reveal') return '<button class="emblem" type="button" data-act="emblem" aria-label="Boy or girl?"><span class="cloudq"><i class="art art-gr-cloud"></i><span>?</span></span></button>';
     return '<button class="emblem" type="button" data-act="emblem" aria-label="Celebrate"><span class="medal"><i class="art art-' + th.art.emblem + '"></i></span></button>';
   }
+  /* The couple's initials, pressed into the wedding wax seal: "Sofia & Marvin" -> S & M */
+  function initials(inv) {
+    var parts = [inv.nameA, inv.nameB].filter(function (x) { return String(x || '').trim(); });
+    if (parts.length < 2) parts = String(inv.headline || '').split(/\s*(?:&|\+|\band\b|\bund\b|\by\b|\bet\b)\s*/i).filter(function (x) { return x.trim(); });
+    var first = function (t) { var m = /[\p{L}\p{N}]/u.exec(String(t)); return m ? m[0].toUpperCase() : ''; };
+    var a = first(parts[0] || ''), b = first(parts[1] || '');
+    return { a: a, b: b };
+  }
+  function weddingSeal(inv) {
+    var m = initials(inv);
+    return '<span class="mono-seal"><i class="art art-seal-blank"></i><span class="mono" aria-hidden="true">' + esc(m.a) + (m.b ? '<i>&amp;</i>' + esc(m.b) : '') + '</span></span>';
+  }
+  function sealArt(inv, a) { return inv.occasion === 'wedding' ? weddingSeal(inv) : '<i class="art art-' + (a.seal || 'seal') + '"></i>'; }
   function storyEmblem(inv) {
-    if (inv.occasion === 'wedding') return '<div class="emb"><i class="art art-seal"></i></div>';
+    if (inv.occasion === 'wedding') return '<div class="emb">' + weddingSeal(inv) + '</div>';
     if (inv.occasion === 'birthday') return '<div class="emb"><span class="rosette"><i class="art art-bd-rosette"></i><span>' + esc(inv.age || '★') + '</span></span></div>';
     if (inv.occasion === 'reveal') return '<div class="emb cloud"><i class="art art-gr-cloud"></i></div>';
     return '<div class="emb"><i class="art art-' + (THEMES[inv.occasion] || THEMES.wedding).art.emblem + '"></i></div>';
@@ -463,7 +480,7 @@
     if (th.opener === 'envelope') {
       h.push('<div class="envelope"><div class="env-back"></div><div class="letter"><span class="script">' + esc(w.letter) + '</span><small>' + esc(inv.city) + '</small></div>',
         '<div class="env-front"></div><div class="env-bottom-w"><div class="env-bottom"></div></div><div class="flap-w"><div class="flap"></div></div>',
-        '<button class="seal" type="button" data-act="open" aria-label="Open the invitation"><i class="art art-' + (a.seal || 'seal') + '"></i></button></div>');
+        '<button class="seal" type="button" data-act="open" aria-label="Open the invitation">' + sealArt(inv, a) + '</button></div>');
     } else {
       h.push('<button class="gift" type="button" data-act="open" aria-label="' + esc(w.open) + '"><i class="art g-body art-' + a.box + '-body"></i><i class="art g-lid art-' + a.box + '-lid"></i><span class="g-tag">' + esc(w.tag || (occ === 'reveal' ? 'Boy or girl?' : 'Open me')) + '</span></button><div class="floaters"></div>');
     }
@@ -502,11 +519,16 @@
     }
 
     // 5 Story
-    if (inv.story || (inv.photos && inv.photos.story)) {
+    var mile = occ === 'wedding' ? [['We met', inv.storyMet], ['The proposal', inv.storyProposal]].filter(function (x) { return String(x[1] || '').trim(); }) : [];
+    if (inv.story || (inv.photos && inv.photos.story) || mile.length) {
       h.push('<section class="block" data-sec="story"><div class="heading"><h2 class="caps">' + esc(w.story[0]) + '</h2><span class="script">' + esc(w.story[1]) + '</span></div>',
         '<div class="paper story"><div class="story-top"><div class="left"><i class="art art-' + a.side + ' side-art" aria-hidden="true"></i>' + storyEmblem(inv) + '</div>',
         '<div class="photo">' + photoBox(inv.photos && inv.photos.story, names) + '</div></div>',
-        inv.story ? '<p class="tale">' + esc(inv.story) + '</p>' : '', '</div></section>');
+        inv.story ? '<p class="tale">' + esc(inv.story) + '</p>' : '',
+        mile.length ? '<ol class="milestones">' + mile.concat([['The wedding', [d ? fmtDots(d) : '', inv.city].filter(Boolean).join(' · ')]]).map(function (x, i, all) {
+          return '<li' + (i === all.length - 1 ? ' class="now"' : '') + '><span class="ms-dot" aria-hidden="true"></span><span class="ms-k">' + esc(x[0]) + '</span><span class="ms-v">' + esc(x[1]) + '</span></li>';
+        }).join('') + '</ol>' : '',
+        (occ === 'wedding' && inv.story) ? '<p class="tale-sign">' + esc(inv.nameA && inv.nameB ? inv.nameA + ' & ' + inv.nameB : names) + '</p>' : '', '</div></section>');
     }
 
     // 6 Timeline
@@ -559,7 +581,7 @@
     // 9 Closing
     var bp = pic(inv, 'band');
     h.push('<section class="block closing" data-sec="closing">' + (bp ? '<div class="band" aria-hidden="true"><span class="bimg" style="background-image:url(\'' + blobUrl(bp) + '\')"></span><span class="bdate">' + esc(d ? MONTHS[d.getMonth()] + ' ' + d.getDate() + ' · ' + d.getFullYear() : '') + '</span></div>' : '') + '<div class="envelope-still" aria-hidden="true"><div class="env-back"></div>' + flora('', a.top) + '<div class="env-bottom-w"><div class="env-bottom"></div></div>',
-      th.opener === 'envelope' ? '<div class="seal"><i class="art art-' + (a.seal || 'seal') + '"></i></div>' : '', '</div>',
+      th.opener === 'envelope' ? '<div class="seal">' + sealArt(inv, a) + '</div>' : '', '</div>',
       '<p class="thank">' + esc(inv.thanks) + '</p><p class="love">' + esc(w.closing) + '</p><p class="sig foil">' + esc(names) + '</p>',
       '<p class="date">' + (occ === 'wedding' ? fmtDots(d) : esc(fmtLong(d))) + '</p>',
       inv.contact ? '<hr><p class="contact">For any questions, please contact<br><b>' + esc(inv.contact) + '</b></p>' : '', '</section>');
@@ -1092,7 +1114,8 @@
       photoField('map', 'Map of your street', d) + '<p class="hint">To show your real street on the venue card: open your venue in Google Maps, take a screenshot, and upload it here. Guests tap it to open Google Maps. <button class="text-link" type="button" data-map-search>Open your venue in Google Maps</button></p>',
       fieldHtml('Contact for questions (email or phone)', 'contact', d.contact), '</section>');
     h.push('<section class="sec"><h2>Photos</h2>' + photoField('cover', 'Cover photo', d) + photoField('story', 'Story photo', d) + '<h3 class="sub-h">More photos inside the invitation</h3><p class="hint">These start with photos picked for your theme. Change any of them, or remove one to hide it.</p>' + EXTRA_SLOTS.map(function (x) { return photoField(x[0], x[1], d); }).join('') + (S.assets ? '' : '<p class="hint">Photo uploads are available to editors of this page.</p>') + '</section>');
-    h.push('<section class="sec"><h2>' + esc(th.words.story[0]) + '</h2>', fieldHtml('A few lines (leave empty to hide this section)', 'story', d.story, 'textarea'), '</section>');
+    h.push('<section class="sec"><h2>' + esc(th.words.story[0]) + '</h2>', fieldHtml('A few lines (leave empty to hide this section)', 'story', d.story, 'textarea'),
+      d.occasion === 'wedding' ? '<div class="row">' + fieldHtml('Where and when you met (optional)', 'storyMet', d.storyMet || '', 'text', ' placeholder="Lisbon, spring 2019"') + fieldHtml('The proposal (optional)', 'storyProposal', d.storyProposal || '', 'text', ' placeholder="Amalfi Coast, summer 2025"') + '</div><p class="hint">These show as a short timeline under your story, ending with your wedding date. The wax seal shows your initials from the names above.</p>' : '', '</section>');
     h.push('<section class="sec"><h2>Schedule</h2><div class="sched" data-sched>' + schedRows(d) + '</div><div><button class="s-btn" type="button" data-sched-add>' + plus() + 'Add a moment</button></div></section>');
     h.push('<section class="sec"><h2>Details</h2><div class="row">' + fieldHtml('Dress code (leave empty to hide)', 'dress', d.dress) + fieldHtml('Dress code note', 'dressNote', d.dressNote) + '</div>' + dressChips(d),
       '<div class="fld"><span>Suggested colors</span><div class="colors">' + (d.colors || []).map(function (c, i) { return '<input type="color" aria-label="Color ' + (i + 1) + '" data-color="' + i + '" value="' + esc(c) + '">'; }).join('') + '</div><span class="hint" style="margin-top:4px">Tap a circle to fine tune, or pick a preset</span>' + palettesHtml(d) + '</div>',
@@ -1250,6 +1273,7 @@
 
   var PALETTES = {
     wedding: [
+      ['Blue and gold blooms', ['#f7f4ee', '#dbe4ec', '#7d9fc3', '#86a79b', '#2f4a73']],
       ['Garden sage', ['#f5f2ea', '#e2dccd', '#a9b086', '#6f7b4f', '#4b5532']],
       ['Champagne toast', ['#fbf6ee', '#efe2c8', '#d8bf8f', '#b8955a', '#6e5636']],
       ['Dusty rose', ['#f8efec', '#ead0ca', '#d3a29b', '#a86f6b', '#5e3c3c']],

@@ -447,6 +447,23 @@
   .inv .story-top .left .emb { width: 88px; }
   .inv .story-top .left .emb.cloud { width: 120px; }
   .inv .story p.tale { font-family: var(--body); font-style: italic; font-size: 1.2rem; line-height: 1.6; color: var(--ink); white-space: pre-line; }
+  .inv .story .tale-sign { font-family: var(--script); font-size: 1.9rem; line-height: 1.1; color: var(--ink-soft); margin-top: -6px; }
+  /* a short timeline under the story: we met, the proposal, the wedding */
+  .inv .milestones { list-style: none; margin: 4px 0 0; padding: 18px 0 0; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 10px; position: relative; border-top: 1px solid var(--line); }
+  .inv .milestones::before { content: ""; position: absolute; left: 16%; right: 16%; top: 31px; height: 1px; background: linear-gradient(90deg, transparent, var(--foil-a) 12%, var(--foil-b) 50%, var(--foil-a) 88%, transparent); opacity: .7; }
+  .inv .milestones li { position: relative; display: grid; justify-items: center; gap: 3px; text-align: center; min-width: 0; }
+  .inv .milestones .ms-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--page); box-shadow: inset 0 0 0 1.5px var(--foil-a); margin-bottom: 6px; position: relative; }
+  .inv .milestones li.now .ms-dot { background: linear-gradient(135deg, var(--foil-a), var(--foil-b)); box-shadow: 0 0 0 3px var(--page), 0 0 0 4px color-mix(in srgb, var(--foil-a) 60%, transparent); }
+  .inv .milestones .ms-k { font-family: var(--display); font-size: .66rem; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-soft); }
+  .inv .milestones .ms-v { font-size: .98rem; line-height: 1.3; color: var(--ink); overflow-wrap: anywhere; }
+  /* the wedding seal: a blank wax seal with the couple's initials pressed in */
+  .inv .mono-seal { position: relative; display: block; width: 100%; height: 100%; container-type: inline-size; }
+  .inv .mono-seal .art { width: 100%; height: 100%; }
+  .inv .mono-seal .mono { position: absolute; inset: 0 0 0 1.5%; display: flex; align-items: center; justify-content: center; gap: .04em; padding-bottom: 2%;
+    font-family: var(--script); font-size: 33cqw; line-height: 1; white-space: nowrap; pointer-events: none;
+    color: rgba(70, 45, 10, .5); mix-blend-mode: multiply; text-shadow: 0 .03em 0 rgba(255, 245, 215, .55), 0 -.02em 0 rgba(0, 0, 0, .12); }
+  .inv .mono-seal .mono i { font-style: normal; font-size: .62em; margin-inline: .04em; }
+  .inv .story-top .left .emb .mono-seal { height: auto; }
   .inv:not([data-occasion="wedding"]) .story p.tale { font-style: normal; font-size: 1.05rem; line-height: 1.65; }
 
   /* Timeline */
@@ -956,3 +973,18 @@
 .signin-msg.bad { background: color-mix(in srgb, #c0392b 12%, transparent); }
 .signin-go { justify-content: center; padding-block: 12px; font-size: 1rem; }
 .signin-links { display: flex; flex-wrap: wrap; gap: 6px 18px; justify-content: center; font-size: .9rem; }
+
+/* Wedding watercolour art in the host's colours: greenery stays green, the blooms take the palette's
+   accent (side sprigs its second colour), and gold sprigs and stamens stay gold on top */
+.inv[data-custom][data-occasion="wedding"] .art-wc-cluster { background-image: url("art/wc-cluster-leaf.webp"); --wc-m: url("art/wc-cluster-petal.webp"); --wc-g: url("art/wc-cluster-gold.webp"); }
+.inv[data-custom][data-occasion="wedding"] .art-wc-garland { background-image: url("art/wc-garland-leaf.webp"); --wc-m: url("art/wc-garland-petal.webp"); --wc-g: url("art/wc-garland-gold.webp"); }
+.inv[data-custom][data-occasion="wedding"] .art-wc-sprig { background-image: url("art/wc-sprig-leaf.webp"); --wc-m: url("art/wc-sprig-petal.webp"); --wc-g: url("art/wc-sprig-gold.webp"); --wc-tone: var(--p2); }
+.inv[data-custom][data-occasion="wedding"] .art-wc-strand { background-image: url("art/wc-strand-leaf.webp"); --wc-m: url("art/wc-strand-petal.webp"); --wc-g: url("art/wc-strand-gold.webp"); --wc-tone: var(--p2); }
+.inv[data-custom][data-occasion="wedding"] .art[class*="art-wc-"]::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: color-mix(in oklab, var(--wc-tone, var(--pa)) 86%, var(--pd));
+  -webkit-mask: var(--wc-m) center / 100% 100% no-repeat; mask: var(--wc-m) center / 100% 100% no-repeat;
+}
+.inv[data-custom][data-occasion="wedding"] .art[class*="art-wc-"]::after { background: var(--wc-g) center / 100% 100% no-repeat; -webkit-mask: none; mask: none; mix-blend-mode: normal; opacity: 1; }
+/* the wax seal takes the bloom colour too */
+.inv[data-custom][data-occasion="wedding"] .art-seal-blank::after { background: var(--pa); }

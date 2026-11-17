@@ -3,8 +3,13 @@
 
 Each piece is drawn as an SVG with watercolour filters (wobbly edges, pigment pooling at the rim, paper grain),
 rendered by headless Chrome on a transparent background and saved as WebP.
+
+Each piece is also saved as three layers, so the page can paint the blooms in the host's own colours:
+  wc-*-leaf   greenery and stems, in colour (blooms cut out of it)
+  wc-*-petal  the blooms as an alpha mask only; the page fills it with the chosen flower colour
+  wc-*-gold   gold sprigs, gold dots and the stamens, in colour, drawn on top
 Usage: python art/watercolor.py [path to chrome]      (needs Pillow and Chrome or Edge)"""
-import math, os, random, subprocess, sys, tempfile
+import math, os, random, re, subprocess, sys, tempfile
 from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -13,6 +18,19 @@ CHROME = sys.argv[1] if len(sys.argv) > 1 else next((p for p in (
     r'C:\Program Files\Google\Chrome\Application\chrome.exe', r'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe',
     '/usr/bin/google-chrome', '/usr/bin/chromium', '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome') if os.path.exists(p)), 'chrome')
 SCALE = 2
+MODE = 'full'            # 'full' or one layer: 'leaf', 'petal', 'gold'
+CUTS = []                # bloom underlays, cut out of the leaf layer
+
+
+def emit(kind, svg):
+    """Keep a drawing only in the full picture and in its own layer. Geometry is always computed by the caller,
+    so the random numbers line up and every layer matches the full picture exactly."""
+    if MODE == 'full': return svg
+    if MODE != kind: return ''
+    if kind == 'petal':   # a mask: colour does not matter, coverage does; a little denser so light colours still read
+        svg = re.sub(r'fill="[^"]*"', 'fill="#000"', svg)
+        svg = re.sub(r'opacity="([0-9.]+)"', lambda m: 'opacity="%.2f"' % min(.92, float(m.group(1)) * 1.45), svg)
+    return svg
 
 BLUE = ['#b4cbe0', '#7d9fc3', '#4f72a0', '#2f4a73']          # petals, light to deep
 LEAF = ['#86a79b', '#a3bba9', '#6b8a99', '#5d8076']          # sage and blue-grey greens
@@ -56,37 +74,39 @@ def blob(cx, cy, rx, ry, rot, rnd, n=9, j=.14):
 
 def flower(cx, cy, r, rnd, tone=0):
     o = []; a0 = rnd.uniform(0, 6.28)
-    if r > 34: o.append('<path d="%s" fill="#fbfaf6" opacity=".93" filter="url(#wc)"/>' % blob(cx, cy, r * .8, r * .8, 0, rnd))  # paper underlay hides stems behind a bloom
+    if r > 34:  # paper underlay hides stems behind a bloom
+        und = blob(cx, cy, r * .8, r * .8, 0, rnd); CUTS.append(und)
+        if MODE == 'full': o.append('<path d="%s" fill="#fbfaf6" opacity=".93" filter="url(#wc)"/>' % und)
     rings = [(7, 1.0, .72, BLUE[0 + tone], .5), (6, .72, .56, BLUE[1 + tone], .5), (5, .46, .4, BLUE[min(3, 2 + tone)], .55)]
     for n, ln, wd, col, op in rings:
         a0 += rnd.uniform(.3, .6)
         for i in range(n):
             a = a0 + 2 * math.pi * i / n + rnd.uniform(-.12, .12); L = r * ln * rnd.uniform(.9, 1.08)
-            o.append('<path d="%s" fill="%s" opacity="%.2f" filter="url(#wc)"/>' % (
-                blob(cx + math.cos(a) * L * .5, cy + math.sin(a) * L * .5, L * .56, r * wd * .5 * rnd.uniform(.9, 1.1), a, rnd), col, op * rnd.uniform(.85, 1.1)))
-    o.append('<path d="%s" fill="%s" opacity=".6" filter="url(#wc)"/>' % (blob(cx, cy, r * .17, r * .17, 0, rnd), BLUE[3]))
+            o.append(emit('petal', '<path d="%s" fill="%s" opacity="%.2f" filter="url(#wc)"/>' % (
+                blob(cx + math.cos(a) * L * .5, cy + math.sin(a) * L * .5, L * .56, r * wd * .5 * rnd.uniform(.9, 1.1), a, rnd), col, op * rnd.uniform(.85, 1.1))))
+    o.append(emit('petal', '<path d="%s" fill="%s" opacity=".6" filter="url(#wc)"/>' % (blob(cx, cy, r * .17, r * .17, 0, rnd), BLUE[3])))
     for i in range(7):
         a = rnd.uniform(0, 6.28); d = r * rnd.uniform(.03, .16)
-        o.append('<circle cx="%.1f" cy="%.1f" r="%.1f" fill="%s"/>' % (cx + math.cos(a) * d, cy + math.sin(a) * d, max(1.1, r * rnd.uniform(.022, .04)), GOLD))
+        o.append(emit('gold', '<circle cx="%.1f" cy="%.1f" r="%.1f" fill="%s"/>' % (cx + math.cos(a) * d, cy + math.sin(a) * d, max(1.1, r * rnd.uniform(.022, .04)), GOLD)))
     return ''.join(o)
 
 
 def leaf(x, y, deg, L, w, col, op=.62, gold=False):
     d = 'M0 0C%.1f %.1f %.1f %.1f %.1f 0C%.1f %.1f %.1f %.1f 0 0Z' % (L * .3, -w, L * .72, -w * .75, L, L * .72, w * .75, L * .3, w)
     if gold:
-        return '<g transform="translate(%.1f %.1f) rotate(%.1f)" filter="url(#foil)"><path d="%s" fill="%s"/><path d="M0 0L%.1f 0" stroke="#8f6c2c" stroke-width=".6" opacity=".55"/></g>' % (x, y, deg, d, GOLD, L * .92)
-    return '<g transform="translate(%.1f %.1f) rotate(%.1f)" filter="url(#wc)"><path d="%s" fill="%s" opacity="%.2f"/><path d="M2 0L%.1f 0" stroke="#3f5d58" stroke-width=".9" opacity=".35"/></g>' % (x, y, deg, d, col, op, L * .9)
+        return emit('gold', '<g transform="translate(%.1f %.1f) rotate(%.1f)" filter="url(#foil)"><path d="%s" fill="%s"/><path d="M0 0L%.1f 0" stroke="#8f6c2c" stroke-width=".6" opacity=".55"/></g>' % (x, y, deg, d, GOLD, L * .92))
+    return emit('leaf', '<g transform="translate(%.1f %.1f) rotate(%.1f)" filter="url(#wc)"><path d="%s" fill="%s" opacity="%.2f"/><path d="M2 0L%.1f 0" stroke="#3f5d58" stroke-width=".9" opacity=".35"/></g>' % (x, y, deg, d, col, op, L * .9))
 
 
 def stem(pts, col='#6f8f86', w=1.8, gold=False):
     d = 'M%.1f %.1f' % pts[0] + ''.join('Q%.1f %.1f %.1f %.1f' % (pts[i] + pts[i + 1]) for i in range(1, len(pts) - 1, 2))
-    return '<path d="%s" fill="none" stroke="%s" stroke-width="%.1f" stroke-linecap="round" opacity="%s"%s/>' % (d, GOLD if gold else col, w, 1 if gold else .75, ' filter="url(#foil)"' if gold else '')
+    return emit('gold' if gold else 'leaf', '<path d="%s" fill="none" stroke="%s" stroke-width="%.1f" stroke-linecap="round" opacity="%s"%s/>' % (d, GOLD if gold else col, w, 1 if gold else .75, ' filter="url(#foil)"' if gold else ''))
 
 
 def dots(rnd, box, n, gold=True):
     x0, y0, x1, y1 = box
-    return ''.join('<circle cx="%.1f" cy="%.1f" r="%.1f" fill="%s" opacity="%.2f"/>' % (rnd.uniform(x0, x1), rnd.uniform(y0, y1), rnd.uniform(.9, 2.6),
-                   GOLD if gold else BLUE[1], 1 if gold else .45) for _ in range(n))
+    return ''.join(emit('gold' if gold else 'petal', '<circle cx="%.1f" cy="%.1f" r="%.1f" fill="%s" opacity="%.2f"/>' % (rnd.uniform(x0, x1), rnd.uniform(y0, y1), rnd.uniform(.9, 2.6),
+                   GOLD if gold else BLUE[1], 1 if gold else .45)) for _ in range(n))
 
 
 def gold_sprig(x, y, deg, L, rnd, n=5):
@@ -142,13 +162,17 @@ def strand():
         k = 1 - i * .055; x = 58 + 5 * math.sin(y / 70)
         o.append(leaf(x, y, 62, 40 * k, 11 * k, LEAF[i % 4])); o.append(leaf(x, y + 6, 118, 38 * k, 10 * k, LEAF[(i + 2) % 4]))
         if i % 3 == 1:
-            o.append(stem([(x, y + 12), (x + 14, y + 20), (x + 20, y + 30)], w=1, gold=True)); o.append('<circle cx="%.1f" cy="%.1f" r="3.4" fill="%s"/>' % (x + 20, y + 32, GOLD))
-            o.append(stem([(x, y + 12), (x - 13, y + 22), (x - 17, y + 34)], w=1, gold=True)); o.append('<circle cx="%.1f" cy="%.1f" r="2.8" fill="%s"/>' % (x - 17, y + 36, GOLD))
+            o.append(stem([(x, y + 12), (x + 14, y + 20), (x + 20, y + 30)], w=1, gold=True)); o.append(emit('gold', '<circle cx="%.1f" cy="%.1f" r="3.4" fill="%s"/>' % (x + 20, y + 32, GOLD)))
+            o.append(stem([(x, y + 12), (x - 13, y + 22), (x - 17, y + 34)], w=1, gold=True)); o.append(emit('gold', '<circle cx="%.1f" cy="%.1f" r="2.8" fill="%s"/>' % (x - 17, y + 36, GOLD)))
     o += [flower(58, 378, 15, r, 1), dots(r, (20, 30, 100, 380), 6)]
     return 120, 400, ''.join(o)
 
 
 def render(name, w, h, body):
+    if MODE == 'leaf' and CUTS:
+        cut = '<mask id="cut" maskUnits="userSpaceOnUse" x="0" y="0" width="%d" height="%d"><rect width="%d" height="%d" fill="#fff"/>%s</mask>' % (
+            w, h, w, h, ''.join('<path d="%s" fill="#000"/>' % c for c in CUTS))
+        body = '<defs>%s</defs><g mask="url(#cut)">%s</g>' % (cut, body)
     svg = '<svg xmlns="http://www.w3.org/2000/svg" width="%d" height="%d" viewBox="0 0 %d %d">%s%s</svg>' % (w * SCALE, h * SCALE, w, h, DEFS, body)
     tmp = tempfile.mkdtemp(); page = os.path.join(tmp, name + '.html'); png = os.path.join(tmp, name + '.png')
     open(page, 'w', encoding='utf-8').write('<!doctype html><html><body style="margin:0;background:transparent;overflow:hidden">' + svg + '</body></html>')
@@ -162,4 +186,6 @@ def render(name, w, h, body):
 
 if __name__ == '__main__':
     for name, fn in (('wc-cluster', cluster), ('wc-garland', garland), ('wc-sprig', sprig), ('wc-strand', strand)):
-        render(name, *fn())
+        for MODE in ('full', 'leaf', 'petal', 'gold'):
+            CUTS.clear()
+            render(name if MODE == 'full' else name + '-' + MODE, *fn())

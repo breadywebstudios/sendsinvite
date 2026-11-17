@@ -1,6 +1,6 @@
 # Real photo library
 
-Free to use under the Unsplash and Pexels licences (no attribution required). Uploaded to the artifact as assets; ids are in LIBRARY in src/app.js.
+Free to use under the Unsplash and Pexels licences (no attribution required). The ids are in LIBRARY in src/app.js.
 
 | File | Theme | Label | Asset id | Source |
 |---|---|---|---|---|

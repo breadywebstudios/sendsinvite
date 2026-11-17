@@ -85,3 +85,29 @@ create policy "inv hosts upload photos to own folder" on storage.objects
 drop policy if exists "inv hosts delete own photos" on storage.objects;
 create policy "inv hosts delete own photos" on storage.objects
   for delete to authenticated using (bucket_id = 'inv-photos' and (storage.foldername(name))[1] = (select auth.uid())::text);
+
+-- Link names: a host can give an invitation a readable address such as /emma-oliver-wedding.
+-- The name is unique across all invitations, so a second host asking for a taken name is refused.
+alter table public.inv_invites add column if not exists slug text;
+do $$ begin
+  if not exists (select 1 from pg_constraint where conname = 'inv_invites_slug_format') then
+    alter table public.inv_invites add constraint inv_invites_slug_format
+      check (slug is null or (slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$' and length(slug) between 3 and 60));
+  end if;
+end $$;
+create unique index if not exists inv_invites_slug_key on public.inv_invites (slug) where slug is not null;
+
+-- Guests open an invitation by its link name.
+create or replace function public.inv_find_invite(p_slug text)
+returns jsonb language sql stable security definer set search_path = '' as $$
+  select jsonb_build_object('id', i.id, 'data', i.data) from public.inv_invites i where i.slug = lower(p_slug);
+$$;
+-- Hosts check whether a link name is free before saving it (true when no other invitation has it).
+create or replace function public.inv_link_free(p_slug text, p_id text)
+returns boolean language sql stable security definer set search_path = '' as $$
+  select not exists (select 1 from public.inv_invites i where i.slug = lower(p_slug) and i.id <> coalesce(p_id, ''));
+$$;
+revoke all on function public.inv_find_invite(text) from public;
+revoke all on function public.inv_link_free(text, text) from public;
+grant execute on function public.inv_find_invite(text) to anon, authenticated;
+grant execute on function public.inv_link_free(text, text) to authenticated;

@@ -1,7 +1,6 @@
 (function () {
   'use strict';
-  var ARTIFACT_URL = 'https://claude.ai/artifact/MPCjvN5iiqt3H9J7bMEyhY';
-  /* Set by site.js when the app runs as a standalone website instead of inside claude.ai */
+  /* Set by site.js: sign-in, saving, uploads and links for the website */
   var SITE = window.SITE || null;
   var REDUCE = false;
   try { REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
@@ -9,9 +8,9 @@
   /* ───────── Occasion themes ───────── */
   var THEMES = {
     wedding: {
-      label: 'Wedding', blurb: 'Ivory cotton paper, white ranunculus, a gold wax seal and a gold-edged envelope that opens.',
+      label: 'Wedding', blurb: 'Ivory cotton paper, watercolour blue blooms with gold leaves, a gold wax seal and a gold-edged envelope that opens.',
       dot: '#6f7b4f', opener: 'envelope', particles: 'petals', closingEnvelope: true,
-      art: { corner: 'cluster', top: 'garland', side: 'sprig', hang: 'strand', emblem: 'seal' },
+      art: { corner: 'wc-cluster', top: 'wc-garland', side: 'wc-sprig', hang: 'wc-strand', emblem: 'seal' },
       vars: { ground: '#ebe7df', script: '"Allura", cursive', display: '"Marcellus", Georgia, serif', ink: '#3d3b35', inkSoft: '#77736a' },
       words: {
         open: 'View the invitation', letter: 'You are invited', toLine: 'To the wedding of', save: ['Save', 'The', 'Date'],
@@ -366,7 +365,7 @@
       '<span class="map-pin">' + PIN + '</span><span class="map-cap">' + esc(inv.venue || inv.address || 'The venue') + '<small>Tap to open in Google Maps</small></span></a>';
   }
   var PIN = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>';
-  function inviteUrl(id) { return SITE ? SITE.inviteUrl(id) : ARTIFACT_URL + '#i-' + id; }
+  function inviteUrl(id) { return SITE ? SITE.inviteUrl(id) : location.origin + location.pathname + '#i-' + id; }
 
   function makeInvite(occasion) {
     var th = THEMES[occasion], d = clone(th.defaults);
@@ -876,10 +875,12 @@
     if ((m = /^edit-([\w~.-]+)$/.exec(h))) return { view: 'edit', id: m[1] };
     if ((m = /^replies-([\w~.-]+)$/.exec(h))) return { view: 'replies', id: m[1] };
     if (h === 'new') return { view: 'new' };
+    /* a readable guest link such as /emma-oliver-wedding: the name is looked up when the invitation opens */
+    if (!h && SITE && SITE.pathName && SITE.pathName()) return { view: 'invite', id: '@' + SITE.pathName() };
     return { view: 'home' };
   }
   function go(token) {
-    try { if (('#' + token) !== location.hash) { history.pushState(null, '', token ? '#' + token : location.pathname + location.search); } } catch (e) {}
+    try { if (('#' + token) !== location.hash) { history.pushState(null, '', token ? '#' + token : (SITE && SITE.basePath ? SITE.basePath() : location.pathname + location.search)); } } catch (e) {}
     S.route = parseHash(); if (!token) S.route = { view: 'home' };
     S.confirmDelete = false;
     if (SITE && (S.route.view === 'home' || S.route.view === 'replies')) SITE.refresh();
@@ -995,6 +996,66 @@
   }
 
   /* Editor */
+  /* Link name: a readable guest link. The name is checked against every other invitation, and the host is asked to change it when it is taken. */
+  function slugify(t) {
+    var s = String(t || '').toLowerCase(); try { s = s.normalize('NFD').replace(/[\u0300-\u036f]/g, ''); } catch (e) {}
+    return s.replace(/&/g, ' ').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60).replace(/-+$/, '');
+  }
+  var LINK_HELP = 'Letters, numbers and dashes. The private link above always keeps working.';
+  var LINK_CHANGE_WARN = 'If you change or remove this name, the old named link stops working for guests who already have it. The private link above always keeps working.';
+  function linkTakenMsg(name) { return '“' + name + '” is already used by another invitation. Change the name a little and try again, for example ' + (name + '-' + new Date().getFullYear()).slice(0, 60) + '.'; }
+  function linkNameField(id, d) {
+    if (!SITE || !SITE.setLink || !SITE.linksReady()) return '';
+    var cur = SITE.linkName(id), th = THEMES[d.occasion] || THEMES.wedding;
+    /* a name the host is still typing survives the editor redrawing its form */
+    var dr = S.linkDraft && S.linkDraft.id === id ? S.linkDraft : null;
+    var val = dr ? dr.value : (cur || slugify((d.headline || '') + ' ' + th.label.split(' ')[0]));
+    var msg = dr && dr.msg ? dr.msg : (cur ? 'Your guest link uses this name. ' + LINK_CHANGE_WARN : 'Give your guest link a name guests can read. ' + LINK_HELP);
+    return '<div class="link-name"><label class="fld"><span>Link name</span><span class="link-name-row"><span class="link-prefix">' + esc(SITE.linkBase()) + '</span><input type="text" data-link-name="' + id + '" value="' + esc(val) + '" maxlength="60" autocapitalize="off" autocomplete="off" spellcheck="false" placeholder="emma-oliver-wedding"></span></label>' +
+      '<div><button class="s-btn" type="button" data-link-save="' + id + '">' + (cur ? 'Change link' : 'Use this link') + '</button></div>' +
+      '<p class="hint' + (dr && dr.kind ? ' ' + dr.kind : '') + '" data-link-msg role="status">' + esc(msg) + '</p></div>';
+  }
+  function linkMsg(text, kind) {
+    if (S.linkDraft) { S.linkDraft.msg = text; S.linkDraft.kind = kind || ''; }
+    var m = $('[data-link-msg]'); if (m) { m.textContent = text; m.className = 'hint' + (kind ? ' ' + kind : ''); }
+  }
+  var linkCheckSeq = 0, linkSaving = false;
+  var linkCheckSoon = debounce(function () {
+    if (linkSaving) return;
+    var inp = $('[data-link-name]'); if (!inp || !SITE) return;
+    var id = inp.getAttribute('data-link-name'), name = slugify(inp.value), seq = ++linkCheckSeq;
+    if (!name) { linkMsg(SITE.linkName(id) ? 'Press the button to remove the name. ' + LINK_CHANGE_WARN : 'Leave this empty to keep the private link, or type a name. ' + LINK_HELP); return; }
+    var bad = SITE.linkProblem(name); if (bad) { linkMsg(bad, 'bad'); return; }
+    if (name === SITE.linkName(id)) { linkMsg('Your guest link uses this name. ' + LINK_CHANGE_WARN); return; }
+    SITE.linkFree(name, id).then(function (free) {
+      if (seq !== linkCheckSeq || linkSaving) return;
+      if (free) linkMsg('“' + name + '” is available. Press the button to use it.', 'good'); else linkMsg(linkTakenMsg(name), 'bad');
+    }, function () {});
+  }, 450);
+  function saveLinkName(id) {
+    var inp = $('[data-link-name]'); if (!inp || !SITE) return;
+    var name = slugify(inp.value), bad = name ? SITE.linkProblem(name) : '';
+    linkCheckSeq++;
+    if (bad) { linkMsg(bad, 'bad'); inp.focus(); return; }
+    inp.value = name; if (S.linkDraft) S.linkDraft.value = name; linkSaving = true; linkMsg('Checking…');
+    var stop = function () { linkSaving = false; linkCheckSeq++; };
+    var done = function () {
+      stop(); S.linkDraft = null;
+      var code = $('[data-link-url]'); if (code) code.textContent = inviteUrl(id);
+      var b = $('[data-link-save]'); if (b) b.textContent = name ? 'Change link' : 'Use this link';
+      linkMsg(name ? 'Saved. Your guest link is now ' + inviteUrl(id) : 'Link name removed. Your guest link is the private one above.', 'good'); toast(name ? 'Guest link saved' : 'Link name removed');
+    };
+    var taken = function () { stop(); linkMsg(linkTakenMsg(name), 'bad'); var i = $('[data-link-name]'); if (i) { i.focus(); i.select(); } };
+    var save = function () {
+      return SITE.setLink(id, name).then(done, function (e) {
+        if (e && e.taken) { taken(); return; }
+        stop(); linkMsg(e && e.missing ? 'Couldn’t save the link name because this invitation isn’t saved to your account. Sign in again or reload the page, then try again.' : 'Couldn’t save the link name. Check your connection and try again.', 'bad');
+      });
+    };
+    if (!name) { save(); return; }
+    /* check the name first so the host gets a clear answer; the database still refuses a duplicate if two hosts race */
+    SITE.linkFree(name, id).then(function (free) { if (free) save(); else taken(); }, save);
+  }
   function songHint(link) {
     if (String(link || '').trim() && !spotifyRef(link)) return '<b>That does not look like a Spotify link.</b> In Spotify, open the song, choose Share, then Copy song link, and paste it here.';
     return 'In Spotify, open the song, choose Share, then Copy song link, and paste it here. Guests tap the record (or the play button on the player) to play it, and the record spins while the music plays. Guests who are not signed in to Spotify hear a short preview.';
@@ -1010,6 +1071,7 @@
       return;
     }
     S.draft = clone(inv); S.draft._id = id;
+    if (S.linkDraft && S.linkDraft.id !== id) S.linkDraft = null;
     var d = S.draft, th = THEMES[d.occasion] || THEMES.wedding;
     var h = [];
     h.push(topbar(d.headline, '<span class="save-state" data-save>' + esc(S.saveState) + '</span><button class="s-btn" type="button" data-go="">All invitations</button>'));
@@ -1040,7 +1102,7 @@
       fieldHtml('Gifts or registry note (leave empty to hide)', 'gifts', d.gifts, 'textarea'), fieldHtml('Registry link (optional)', 'giftsUrl', d.giftsUrl, 'url', ' placeholder="https://"'), '</section>');
     h.push('<section class="sec"><h2>RSVP</h2><div class="row">' + fieldHtml('Most guests per reply', 'maxGuests', d.maxGuests, 'number', ' min="1" max="12"') + fieldHtml('Extra question (optional)', 'question', d.question) + '</div>',
       fieldHtml('Answer choices, separated by commas', 'options', d.options), fieldHtml('Thank-you note at the end', 'thanks', d.thanks, 'textarea'), '</section>');
-    h.push('<section class="sec"><h2>Share</h2><div class="link-box"><code>' + esc(inviteUrl(id)) + '</code><button class="s-btn" type="button" data-copy="' + id + '">Copy</button></div><p class="hint">' + (SITE ? 'Send this link to your guests by message or email. They open it and reply right on the page, with no account or app.' : 'To let guests reply, share this page from the Share menu with Contributor access. Viewers can see the invitation but cannot send an RSVP.') + '</p>',
+    h.push('<section class="sec"><h2>Share</h2><div class="link-box"><code data-link-url>' + esc(inviteUrl(id)) + '</code><button class="s-btn" type="button" data-copy="' + id + '">Copy</button></div>' + linkNameField(id, d) + '<p class="hint">' + (SITE ? 'Send this link to your guests by message or email. They open it and reply right on the page, with no account or app.' : 'To let guests reply, share this page from the Share menu with Contributor access. Viewers can see the invitation but cannot send an RSVP.') + '</p>',
       S.confirmDelete ? '<div class="confirm"><span>Delete this invitation? Guests’ replies stay saved.</span><button class="s-btn danger" type="button" data-del-yes>Delete</button><button class="s-btn" type="button" data-del-no>Keep it</button></div>'
         : '<div><button class="s-btn ghost danger" type="button" data-del>Delete invitation</button></div>', '</section>');
     h.push('</div><aside class="preview-col"><div class="preview-bar"><button class="s-btn" type="button" data-play>' + (S.animatePreview ? 'Stop animations' : 'Play animations') + '</button><button class="s-btn" type="button" data-go="i-' + id + '">Open full view</button></div>',
@@ -1048,7 +1110,7 @@
     app.innerHTML = '<div class="studio">' + h.join('') + '</div>';
     paintPreview(true);
   }
-  /* Real photos (free Unsplash/Pexels licence), stored as artifact assets. Older illustrated ids stay valid for invites that already use them. */
+  /* Real photos (free Unsplash/Pexels licence), bundled with the site. Older illustrated ids stay valid for invites that already use them. */
   var LIBRARY = [
     ['b2c6f55335f8441430ae5f4abdbb9f1a', 'Garden reception', 'wedding'], ['f50e2d293d53ed45a79e9201ab8fb0b3', 'Floral aisle', 'wedding'],
     ['a190f7263aa83b8ad2d0e52a98778e42', 'Rings and peonies', 'wedding'], ['60454309eee3e7d95c9d0aa10578c08b', 'Hand in hand', 'wedding'],
@@ -1329,22 +1391,39 @@
 
   /* Guest view */
   var guestReq = 0;
-  function renderGuest(id) {
+  function renderGuestWith(id, reply) { renderGuest(id, { reply: reply || null }); }
+  function hostBar(id) { return '<div class="host-bar"><button type="button" data-go="edit-' + id + '">← Edit</button><button type="button" data-go="">All invitations</button></div>'; }
+  function renderGuest(id, known) {
     document.body.classList.add('guest');
     var inv = S.invites[id];
     var draw = function (inv, reply) {
       teardown();
       document.body.style.setProperty('--ground', (THEMES[inv.occasion] || THEMES.wedding).vars.ground);
-      app.innerHTML = ((S.canEdit && (!SITE || SITE.owns(id))) ? '<div class="host-bar"><button type="button" data-go="edit-' + id + '">← Edit</button><button type="button" data-go="">All invitations</button></div>' : '') +
+      app.innerHTML = ((S.canEdit && (!SITE || SITE.owns(id))) ? hostBar(id) : '') +
         '<div class="inv" data-occasion="' + esc(inv.occasion) + '"' + paletteAttrs(inv) + '>' + renderInvite(inv, 'guest') + '</div>';
       var root = $('.inv', app);
       S.unmount = mountInvite(root, inv, { scroller: null, fxHost: root, animated: true, mode: 'guest', existingReply: reply, saveReply: (S.db && S.uid) ? function (r) { return saveReply(id, r); } : null });
     };
+    if (inv && known) { draw(inv, known.reply); return; }
     if (inv) { draw(inv, null); loadReply(id).then(function (r) { if (r && S.route.view === 'invite' && S.route.id === id) { var f = $('form[data-rsvp]'); if (f && f.name && !f.name.value) draw(inv, r); } }); return; }
     app.innerHTML = '<div class="loading">Opening your invitation…</div>';
-    var req = ++guestReq;
+    var req = ++guestReq, finding = false;
     var tryLoad = function () {
-      if (!S.db) { if (S.connected) app.innerHTML = '<div class="guest-note"><h1>This invitation can’t open here</h1><p>' + (SITE ? 'Check your connection and open your invitation link again.' : 'Sign in to claude.ai and open your invitation link again.') + '</p></div>'; return; }
+      if (id.charAt(0) === '@') {
+        /* one lookup at a time: startup calls tryLoad again while the first one is still on its way */
+        if (!SITE || !SITE.findInvite || finding) return;
+        finding = true;
+        SITE.findInvite(id.slice(1)).then(function (r) {
+          if (req !== guestReq) return;
+          if (!r) { finding = false; app.innerHTML = '<div class="guest-note"><h1>Invitation not found</h1><p>The link may be incomplete, or the host changed or removed this invitation.</p></div>'; return; }
+          guestReq++;
+          var data = clone(r.data); data._id = r.id; S.invites[r.id] = data; S.route = { view: 'invite', id: r.id };
+          /* fetch a returning guest's reply first so the invitation is drawn once, as for a private link */
+          loadReply(r.id).then(function (rep) { if (S.route.view === 'invite' && S.route.id === r.id) renderGuestWith(r.id, rep); });
+        }, function () { finding = false; if (req === guestReq) app.innerHTML = '<div class="guest-note"><h1>Invitation couldn’t load</h1><p>Check your connection and open the link again.</p></div>'; });
+        return;
+      }
+      if (!S.db) { if (S.connected) app.innerHTML = '<div class="guest-note"><h1>This invitation can’t open here</h1><p>' + (SITE ? 'Check your connection and open your invitation link again.' : 'Open your invitation link again.') + '</p></div>'; return; }
       S.db.doc('invites/' + id).get().then(function (snap) {
         if (req !== guestReq) return;
         if (!snap.exists) { app.innerHTML = '<div class="guest-note"><h1>Invitation not found</h1><p>The link may be incomplete, or the host removed this invitation.</p></div>'; return; }
@@ -1374,6 +1453,7 @@
     if ((t = e.target.closest('[data-go]'))) { e.preventDefault(); go(t.getAttribute('data-go')); return; }
     if ((t = e.target.closest('[data-map-search]'))) { if (S.draft) window.open(mapSearchUrl(S.draft), '_blank', 'noopener'); return; }
     if ((t = e.target.closest('[data-new]'))) { createInvite(t.getAttribute('data-new')); return; }
+    if ((t = e.target.closest('[data-link-save]'))) { saveLinkName(t.getAttribute('data-link-save')); return; }
     if ((t = e.target.closest('[data-copy]'))) { copy(inviteUrl(t.getAttribute('data-copy')), 'Guest link copied'); return; }
     if (!S.draft || S.route.view !== 'edit') return;
     if ((t = e.target.closest('[data-tab]')) && t.tagName === 'BUTTON') { S.tab = t.getAttribute('data-tab'); var ed = $('.editor'); if (ed) ed.setAttribute('data-tab', S.tab); $$('.tabs button').forEach(function (b) { b.setAttribute('aria-pressed', String(b === t)); }); if (S.tab === 'preview') paintPreview(false); return; }
@@ -1397,6 +1477,7 @@
   document.addEventListener('input', function (e) {
     if (!S.draft || S.route.view !== 'edit') return;
     var t = e.target, f = t.getAttribute('data-f');
+    if (t.hasAttribute('data-link-name')) { var lid = t.getAttribute('data-link-name'); S.linkDraft = { id: lid, value: t.value, msg: S.linkDraft && S.linkDraft.id === lid ? S.linkDraft.msg : '', kind: S.linkDraft && S.linkDraft.id === lid ? S.linkDraft.kind : '' }; linkCheckSoon(); return; }
     if (f) { S.draft[f] = t.type === 'number' ? Number(t.value) : t.value; if (f === 'headline') { var h1 = $('.s-h1'); if (h1) h1.textContent = t.value || 'Untitled'; } if (f === 'song') { var sh = $('[data-song-hint]'); if (sh) sh.innerHTML = songHint(t.value); } changed(false); return; }
     if (t.hasAttribute('data-s')) { var i = Number(t.getAttribute('data-s')); S.draft.schedule[i][t.getAttribute('data-k')] = t.value; changed(false); return; }
     if (t.hasAttribute('data-color')) { S.draft.colors[Number(t.getAttribute('data-color'))] = t.value; changed(false); }
@@ -1415,8 +1496,8 @@
   /* ───────── Connect to the page's data ───────── */
   render();
   var connectTimer = setTimeout(function () { if (S.canEdit === null) { S.canEdit = false; S.connected = true; render(); } }, 10500);
-  if (window.claude && window.claude.use) {
-    Promise.all([window.claude.use('db'), window.claude.use('user'), window.claude.use('assets')]).then(function (res) {
+  if (window.studioData && window.studioData.use) {
+    Promise.all([window.studioData.use('db'), window.studioData.use('user'), window.studioData.use('assets')]).then(function (res) {
       S.db = res[0]; S.user = res[1]; S.assets = res[2]; S.connected = true;
       var idP = S.user ? S.user.id() : Promise.resolve(null);
       var editP = S.user ? S.user.canEdit() : Promise.resolve(false);
@@ -1429,6 +1510,8 @@
             var ids = snap.docs.map(function (d) { return d.id; });
             Object.keys(S.invites).forEach(function (k) { if (ids.indexOf(k) < 0 && !(S.draft && S.draft._id === k)) delete S.invites[k]; });
             var first = !S.invitesLoaded; S.invitesLoaded = true;
+            /* a host who opened their own invitation by its link name: add the edit bar once ownership is known, without redrawing */
+            if (S.canEdit && S.route.view === 'invite' && $('.inv', app) && !$('.host-bar', app) && (!SITE || SITE.owns(S.route.id))) app.insertAdjacentHTML('afterbegin', hostBar(S.route.id));
             if (S.canEdit && (S.route.view === 'home' || (first && S.route.view !== 'invite' && S.route.view !== 'new'))) render();
           }, function () { S.invitesLoaded = true; if (S.route.view === 'home') render(); });
           if (S.canEdit) {

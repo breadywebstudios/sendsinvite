@@ -1,6 +1,6 @@
 /* Invitation Studio, standalone website layer.
-   The app talks to window.claude.use('db' | 'user' | 'assets'). On the open web this file
-   provides the same three things on top of a Supabase project (see config.js). */
+   The app talks to window.studioData.use('db' | 'user' | 'assets'). This file provides
+   those three things on top of a Supabase project (see config.js). */
 (function () {
   'use strict';
   var C = window.SITE_CONFIG || {};
@@ -112,13 +112,33 @@
   setInterval(function () { if (!document.hidden && session) watchers.forEach(function (w) { w.run(); }); }, 30000);
   document.addEventListener('visibilitychange', function () { if (!document.hidden && session) watchers.forEach(function (w) { w.run(); }); });
 
-  var mine = {};
+  var mine = {}, links = {}, linksOff = false;
   function loadInvites() {
     if (!session) return Promise.resolve([]);
-    return api('/rest/v1/inv_invites?select=id,data&order=updated_at.desc').then(function (rows) {
+    var keepRows = function (rows) {
       mine = {};
-      return (rows || []).map(function (r) { mine[r.id] = true; return snap(r.id, r.data); });
+      return (rows || []).map(function (r) { mine[r.id] = true; if (r.slug !== undefined) links[r.id] = r.slug || ''; return snap(r.id, r.data); });
+    };
+    if (linksOff) return api('/rest/v1/inv_invites?select=id,data&order=updated_at.desc').then(keepRows);
+    /* a database set up before link names existed has no slug column: fall back to the plain list */
+    return api('/rest/v1/inv_invites?select=id,data,slug&order=updated_at.desc').then(keepRows, function (e) {
+      if (e && e.status === 400) { linksOff = true; return loadInvites(); }
+      throw e;
     });
+  }
+  /* ── Link names: a host can give an invitation a readable address such as /emma-oliver-wedding ── */
+  var LINK_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/, RESERVED = ['art', 'photos', 'index', 'new', 'edit', 'replies', 'admin', 'api', 'login', 'app', 'site', 'config', 'favicon'];
+  /* Hosts that rewrite any path to the page (Vercel, see vercel.json) get /emma-oliver-wedding. Elsewhere, such as
+     GitHub Pages, a path with no file behind it is answered with status 404, which makes chat apps drop the link
+     preview, so those links use /?emma-oliver-wedding instead. Set cleanLinks in config.js to choose explicitly. */
+  var CLEAN = C.cleanLinks !== undefined ? !!C.cleanLinks : (function () { try { return /\.vercel\.app$/i.test(location.hostname); } catch (e) { return false; } })();
+  function basePath() { var p = '/'; try { p = location.pathname.replace(/[^\/]*$/, '') || '/'; } catch (e) {} return p; }
+  function okName(seg) { seg = String(seg || '').toLowerCase(); return seg.length >= 3 && seg.length <= 60 && LINK_RE.test(seg) && RESERVED.indexOf(seg) < 0 ? seg : ''; }
+  function pathName() {
+    var seg = '', q = '';
+    try { seg = decodeURIComponent(location.pathname.split('/').pop() || ''); } catch (e) {}
+    try { q = decodeURIComponent((location.search || '').replace(/^\?/, '').split('&')[0]); } catch (e) {}
+    return okName(seg) || (q.indexOf('=') < 0 ? okName(q) : '');
   }
   function loadReplies() {
     if (!session) return Promise.resolve([]);
@@ -246,7 +266,29 @@
     email: function () { return session && session.user ? session.user.email || '' : ''; },
     owns: function (id) { return !!mine[id]; },
     needsPassword: function () { return recovering; },
-    inviteUrl: function (id) { return location.origin + location.pathname + '#i-' + id; },
+    inviteUrl: function (id) { return location.origin + basePath() + (links[id] ? (CLEAN ? '' : '?') + links[id] : '#i-' + id); },
+    basePath: basePath,
+    pathName: pathName,
+    linkBase: function () { return location.host + basePath() + (CLEAN ? '' : '?'); },
+    linksReady: function () { return !linksOff; },
+    linkName: function (id) { return links[id] || ''; },
+    linkProblem: function (name) {
+      if (name.length < 3) return 'Use at least 3 letters or numbers.';
+      if (name.length > 60) return 'Keep the link name under 60 characters.';
+      if (!LINK_RE.test(name)) return 'Use only letters, numbers and dashes.';
+      if (RESERVED.indexOf(name) >= 0) return 'That name is reserved by the site. Pick another one.';
+      return '';
+    },
+    /* true when no other invitation uses this link name */
+    linkFree: function (name, id) { return rpc('inv_link_free', { p_slug: name, p_id: id }).then(function (r) { return r === true; }); },
+    /* saves the link name; the database refuses a name another invitation already has (error.taken) */
+    setLink: function (id, name) {
+      /* ask for the row back: a PATCH that matched nothing (signed out, invitation not saved or deleted) still answers 204 */
+      return api('/rest/v1/inv_invites?id=eq.' + encodeURIComponent(id) + '&select=id', { method: 'PATCH', headers: { Prefer: 'return=representation' }, json: { slug: name || null } })
+        .then(function (rows) { if (!rows || !rows.length) { var e = new Error('not saved'); e.missing = true; throw e; } links[id] = name || ''; },
+          function (e) { if (e && (e.status === 409 || /duplicate|unique/i.test(e.message || ''))) e.taken = true; throw e; });
+    },
+    findInvite: function (name) { return rpc('inv_find_invite', { p_slug: name }).then(function (r) { return r && r.id ? r : null; }); },
     photoUrl: function (id) {
       if (!id) return '';
       if (PHOTOS[id]) return PHOTOS[id];
@@ -259,7 +301,7 @@
     signOut: signOut
   };
 
-  window.claude = {
+  window.studioData = {
     use: function (name) {
       if (!READY) return Promise.resolve(null);
       if (name === 'db') return Promise.resolve(db);

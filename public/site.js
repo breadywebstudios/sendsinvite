@@ -1,7 +1,7 @@
 window.SITE_PHOTOS = {"b2c6f55335f8441430ae5f4abdbb9f1a":"photos/real-01-wedding.jpg","f50e2d293d53ed45a79e9201ab8fb0b3":"photos/real-02-wedding.jpg","a190f7263aa83b8ad2d0e52a98778e42":"photos/real-03-wedding.jpg","60454309eee3e7d95c9d0aa10578c08b":"photos/real-04-wedding.jpg","46c5fb78d080269198865f6b2e9511cc":"photos/real-05-birthday.jpg","ce35008f36c0a493b7f5e0b3ccc806d5":"photos/real-06-birthday.jpg","c621dbfa9fbc0bbc4a9036fc540fb4b1":"photos/real-07-birthday.jpg","5ad9308afee5263e0492219878c18515":"photos/real-08-birthday.jpg","cdca1f58e722f9fec6e40a8a10535f38":"photos/real-09-reveal.jpg","c67849e6aeed2933cd42a239b41e2470":"photos/real-10-reveal.jpg","fb7160145e176c5273fa0f851cf442f8":"photos/real-11-reveal.jpg","d5367f933028c082bee2e2692c4687bb":"photos/real-12-reveal.jpg","a077a11aa7fb11badc601df49eb55ad5":"photos/real-13-christmas.jpg","132047ba1cbf7f69ae5c4dc77b708c41":"photos/real-14-christmas.jpg","f8bd53039ea1ae772ef30e30ac0c90ba":"photos/real-15-christmas.jpg","cc24d35df9ad78e6f04299cb409610da":"photos/real-16-christmas.jpg","3b90e0d9ac3f6e4fd6e1635899a1f8bb":"photos/real-17-newyear.jpg","918d3ed5b9707e31991f9b7029eddb4f":"photos/real-18-newyear.jpg","4dc4403a3e2bb00ce3f094b8f4e3cf63":"photos/real-19-newyear.jpg","9476f1364574dd3cf188f3c3113ee9b4":"photos/real-20-newyear.jpg","99396a7d1f0ff18830601213053e5280":"photos/real-21-bbq.jpg","3ccbe69b11bc2e4abb8d134240b52d4d":"photos/real-22-bbq.jpg","441a06bd64c6582f5043ca5600f597c0":"photos/real-23-bbq.jpg","172c4c488345db83c742fe05fc8e2613":"photos/real-24-bbq.jpg","a9872d2f85d75518435e31f860911fb7":"photos/real-25-camping.jpg","dbed853ed15b733a3295cfac76edd190":"photos/real-26-camping.jpg","bf652be3f32d3caa3fbe175f424b6ce9":"photos/real-27-camping.jpg","dc6c3bf4707b4d452950a9e79ab84548":"photos/real-28-camping.jpg","e690ffe661459d8224ec54d680404a73":"photos/real-29-diwali.jpg","b72a107b36fc320f6db7876a676b4ec2":"photos/real-30-diwali.jpg","58e4251b71af7ff501b7367522cbb7fc":"photos/real-31-diwali.jpg","f61415d36a40d3e69c50ec02960ef59a":"photos/real-32-diwali.jpg","606473d7690968814c9fd085b59a8083":"photos/real-33-eid.jpg","da85e24ab05e1506356f1c470c75c609":"photos/real-34-eid.jpg","dd7cb38095d5436d2ce29c37ff7ab3d3":"photos/real-35-eid.jpg","3cbbdef52c31c631a0c4d49f107145e3":"photos/real-36-eid.jpg","bcc4985434221122539e7501690be7a0":"photos/real-37-ramadan.jpg","eeaffda56adbff7fe800964cb58c17f9":"photos/real-38-ramadan.jpg","47447e9f05c2e9ba0256442b9cd9d2f4":"photos/real-39-ramadan.jpg","79eb78fcd921132720bb382d1a007724":"photos/real-40-ramadan.jpg","2ecff04641064302c7e7728a105122cc":"photos/real-41-uae.jpg","5b9f56a2d1db1f7fe819952f1daafdb0":"photos/real-42-uae.jpg","557a3dfc4fea53fa53290261ae73ab33":"photos/real-43-uae.jpg","827c8fedbded6a742f6d32804a225a71":"photos/real-44-uae.jpg","f99374b1f5ff186ac266750c1af07d18":"photos/real-45-meeting.jpg","b925f49528d785a171573b690b8f1a38":"photos/real-46-meeting.jpg","f5a7554efcf2d51d276d42176fed8b49":"photos/real-47-meeting.jpg","b3bf1c08e574b14bd63e4c28319fb96f":"photos/real-48-meeting.jpg","849cd18cbcd2faeedfa15050f56614c7":"photos/real-49-wedding.jpg","d532787de545dbf07ba71ce1953289d4":"photos/real-50-wedding.jpg","f8f747624d4d4dadc5ef0154d415bee2":"photos/real-51-wedding.jpg","f98704411e3de3e1e6f84bd124db6c5d":"photos/real-52-birthday.jpg","8721a373d418b59a3016415341418595":"photos/real-53-birthday.jpg","0af0160fc017e6d2bdc7dfcf1c6deb26":"photos/real-54-birthday.jpg","e3e4a056b148a29f2d73833d938a272b":"photos/real-55-reveal.jpg","a69149d3fc3dd1ad7af1d5d6b9e1ee29":"photos/real-56-reveal.jpg","7c69bdc568cdb4f1ed9ebe2df13220ff":"photos/real-57-reveal.jpg","388468c97c0de316cc56ec572fd0d88f":"photos/real-58-christmas.jpg","1f18560c7002d3ed55b23b588e7b463c":"photos/real-59-christmas.jpg","6dc5a2d86e258e992b4f89ad43ed6c6b":"photos/real-60-christmas.jpg","9324499cdfcc64f611cfacb6c99f3b08":"photos/real-61-newyear.jpg","1264d005bac8d78900ae2690a67d1b18":"photos/real-62-newyear.jpg","b402a0a8d339dfd18ef0e949208ce192":"photos/real-63-newyear.jpg","78e16ed96be672b32731fa55d8e3691c":"photos/real-64-bbq.jpg","97af41f9fc96a405d6e45698b4cef0c7":"photos/real-65-bbq.jpg","ab4159e45935fe10caae38102ea79f36":"photos/real-66-bbq.jpg","727c55119ad2daf54d837f36088b1449":"photos/real-67-camping.jpg","98e001efee917edbe1e616d721ed967b":"photos/real-68-camping.jpg","f4bf1680c510a1913ce87f51451c2bab":"photos/real-69-camping.jpg","30ee29980b92cd9d1ee6e1390867d0d5":"photos/real-70-diwali.jpg","d9021fb621b01b15da376328bfab6abb":"photos/real-71-diwali.jpg","5ba515cd79aacd86b0503387249929e9":"photos/real-72-diwali.jpg","a0533afd291112b2bf9d542c20d39225":"photos/real-73-eid.jpg","b3ed189d6d4bbfab17613ad88aa90b2c":"photos/real-74-eid.jpg","dfcb3d92ccb128846b7aedf6d1b88c69":"photos/real-75-eid.jpg","e0db455e8c64cc5c79b8236071d99654":"photos/real-76-ramadan.jpg","d95e02f20bfc075a215435ba6a24c556":"photos/real-77-ramadan.jpg","d654133b76fd1c9695cb7ab95e746ead":"photos/real-78-ramadan.jpg","957039461a23693a110a4c6c073e4c0c":"photos/real-79-uae.jpg","ee6deb217b04fd3873eca197d20f8db0":"photos/real-80-uae.jpg","4dd60cfa02e1366943a2c529e7d67ba2":"photos/real-81-uae.jpg","c2a8397a4736230c4092e541b598681a":"photos/real-82-meeting.jpg","46cd9a7e4cf10524e661828ef8cbf110":"photos/real-83-meeting.jpg","ca91e984f9cf6055d4954841175f1e18":"photos/real-84-meeting.jpg"};
 /* Invitation Studio, standalone website layer.
-   The app talks to window.claude.use('db' | 'user' | 'assets'). On the open web this file
-   provides the same three things on top of a Supabase project (see config.js). */
+   The app talks to window.studioData.use('db' | 'user' | 'assets'). This file provides
+   those three things on top of a Supabase project (see config.js). */
 (function () {
   'use strict';
   var C = window.SITE_CONFIG || {};
@@ -113,13 +113,33 @@ window.SITE_PHOTOS = {"b2c6f55335f8441430ae5f4abdbb9f1a":"photos/real-01-wedding
   setInterval(function () { if (!document.hidden && session) watchers.forEach(function (w) { w.run(); }); }, 30000);
   document.addEventListener('visibilitychange', function () { if (!document.hidden && session) watchers.forEach(function (w) { w.run(); }); });
 
-  var mine = {};
+  var mine = {}, links = {}, linksOff = false;
   function loadInvites() {
     if (!session) return Promise.resolve([]);
-    return api('/rest/v1/inv_invites?select=id,data&order=updated_at.desc').then(function (rows) {
+    var keepRows = function (rows) {
       mine = {};
-      return (rows || []).map(function (r) { mine[r.id] = true; return snap(r.id, r.data); });
+      return (rows || []).map(function (r) { mine[r.id] = true; if (r.slug !== undefined) links[r.id] = r.slug || ''; return snap(r.id, r.data); });
+    };
+    if (linksOff) return api('/rest/v1/inv_invites?select=id,data&order=updated_at.desc').then(keepRows);
+    /* a database set up before link names existed has no slug column: fall back to the plain list */
+    return api('/rest/v1/inv_invites?select=id,data,slug&order=updated_at.desc').then(keepRows, function (e) {
+      if (e && e.status === 400) { linksOff = true; return loadInvites(); }
+      throw e;
     });
+  }
+  /* ── Link names: a host can give an invitation a readable address such as /emma-oliver-wedding ── */
+  var LINK_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/, RESERVED = ['art', 'photos', 'index', 'new', 'edit', 'replies', 'admin', 'api', 'login', 'app', 'site', 'config', 'favicon'];
+  /* Hosts that rewrite any path to the page (Vercel, see vercel.json) get /emma-oliver-wedding. Elsewhere, such as
+     GitHub Pages, a path with no file behind it is answered with status 404, which makes chat apps drop the link
+     preview, so those links use /?emma-oliver-wedding instead. Set cleanLinks in config.js to choose explicitly. */
+  var CLEAN = C.cleanLinks !== undefined ? !!C.cleanLinks : (function () { try { return /\.vercel\.app$/i.test(location.hostname); } catch (e) { return false; } })();
+  function basePath() { var p = '/'; try { p = location.pathname.replace(/[^\/]*$/, '') || '/'; } catch (e) {} return p; }
+  function okName(seg) { seg = String(seg || '').toLowerCase(); return seg.length >= 3 && seg.length <= 60 && LINK_RE.test(seg) && RESERVED.indexOf(seg) < 0 ? seg : ''; }
+  function pathName() {
+    var seg = '', q = '';
+    try { seg = decodeURIComponent(location.pathname.split('/').pop() || ''); } catch (e) {}
+    try { q = decodeURIComponent((location.search || '').replace(/^\?/, '').split('&')[0]); } catch (e) {}
+    return okName(seg) || (q.indexOf('=') < 0 ? okName(q) : '');
   }
   function loadReplies() {
     if (!session) return Promise.resolve([]);
@@ -247,7 +267,29 @@ window.SITE_PHOTOS = {"b2c6f55335f8441430ae5f4abdbb9f1a":"photos/real-01-wedding
     email: function () { return session && session.user ? session.user.email || '' : ''; },
     owns: function (id) { return !!mine[id]; },
     needsPassword: function () { return recovering; },
-    inviteUrl: function (id) { return location.origin + location.pathname + '#i-' + id; },
+    inviteUrl: function (id) { return location.origin + basePath() + (links[id] ? (CLEAN ? '' : '?') + links[id] : '#i-' + id); },
+    basePath: basePath,
+    pathName: pathName,
+    linkBase: function () { return location.host + basePath() + (CLEAN ? '' : '?'); },
+    linksReady: function () { return !linksOff; },
+    linkName: function (id) { return links[id] || ''; },
+    linkProblem: function (name) {
+      if (name.length < 3) return 'Use at least 3 letters or numbers.';
+      if (name.length > 60) return 'Keep the link name under 60 characters.';
+      if (!LINK_RE.test(name)) return 'Use only letters, numbers and dashes.';
+      if (RESERVED.indexOf(name) >= 0) return 'That name is reserved by the site. Pick another one.';
+      return '';
+    },
+    /* true when no other invitation uses this link name */
+    linkFree: function (name, id) { return rpc('inv_link_free', { p_slug: name, p_id: id }).then(function (r) { return r === true; }); },
+    /* saves the link name; the database refuses a name another invitation already has (error.taken) */
+    setLink: function (id, name) {
+      /* ask for the row back: a PATCH that matched nothing (signed out, invitation not saved or deleted) still answers 204 */
+      return api('/rest/v1/inv_invites?id=eq.' + encodeURIComponent(id) + '&select=id', { method: 'PATCH', headers: { Prefer: 'return=representation' }, json: { slug: name || null } })
+        .then(function (rows) { if (!rows || !rows.length) { var e = new Error('not saved'); e.missing = true; throw e; } links[id] = name || ''; },
+          function (e) { if (e && (e.status === 409 || /duplicate|unique/i.test(e.message || ''))) e.taken = true; throw e; });
+    },
+    findInvite: function (name) { return rpc('inv_find_invite', { p_slug: name }).then(function (r) { return r && r.id ? r : null; }); },
     photoUrl: function (id) {
       if (!id) return '';
       if (PHOTOS[id]) return PHOTOS[id];
@@ -260,7 +302,7 @@ window.SITE_PHOTOS = {"b2c6f55335f8441430ae5f4abdbb9f1a":"photos/real-01-wedding
     signOut: signOut
   };
 
-  window.claude = {
+  window.studioData = {
     use: function (name) {
       if (!READY) return Promise.resolve(null);
       if (name === 'db') return Promise.resolve(db);

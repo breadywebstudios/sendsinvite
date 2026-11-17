@@ -76,6 +76,9 @@ html = '''<!doctype html>
 </html>
 ''' % (FONTS, v('app.css'), DEFS, v('config.js'), v('site.js'), v('app.js'))
 open(os.path.join(OUT, 'index.html'), 'w').write(html)
+# Guest links with a name (/emma-oliver-wedding) have no file behind them. GitHub Pages serves 404.html for those,
+# so it is a copy of the page; on Vercel, vercel.json rewrites them to index.html instead.
+open(os.path.join(OUT, '404.html'), 'w').write(html)
 open(os.path.join(OUT, 'favicon.svg'), 'w').write('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#f3f0ea"/><path d="M5 10h22v13H5z" fill="#fffdf9" stroke="#8a6d3b" stroke-width="1.4"/><path d="M5 10l11 8 11-8" fill="none" stroke="#8a6d3b" stroke-width="1.4"/><circle cx="16" cy="18" r="3" fill="#b0483a"/></svg>\n')
 total = sum(os.path.getsize(os.path.join(dp, f)) for dp, _, fs in os.walk(OUT) for f in fs)
 print(OUT, 'files', sum(len(fs) for _, _, fs in os.walk(OUT)), 'bytes', total)

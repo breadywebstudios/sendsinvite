@@ -144,6 +144,13 @@ html{-webkit-text-size-adjust:100%}:root{color-scheme:light;padding-top:env(safe
   .hint { color: var(--s-muted); font-size: .84rem; margin: 0; }
   .confirm { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; background: var(--s-raised); border: 1px solid var(--s-line); border-radius: 10px; padding: 10px 12px; }
   .link-box { display: flex; gap: 8px; align-items: center; background: var(--s-raised); border: 1px solid var(--s-line); border-radius: 10px; padding: 6px 6px 6px 12px; min-width: 0; }
+  .link-name { display: grid; gap: 8px; margin-top: 12px; }
+  .link-name-row { display: flex; align-items: center; min-width: 0; background: var(--s-raised); border: 1px solid var(--s-line); border-radius: 10px; padding-left: 12px; }
+  .link-name-row:focus-within { border-color: var(--s-accent); }
+  .link-prefix { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; direction: rtl; font-size: .84rem; color: var(--s-muted); }
+  .fld .link-name-row input[type="text"] { flex: 1 1 140px; min-width: 120px; border: 0; background: none; box-shadow: none; padding-left: 2px; outline: none; }
+  .hint.bad { color: #9c3b2b; }
+  .hint.good { color: #3d6b3f; }
   .link-box code { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .82rem; color: var(--s-muted); user-select: all; }
 
   .preview-col { position: sticky; top: 84px; display: grid; gap: 10px; justify-items: center; }
@@ -227,6 +234,13 @@ html{-webkit-text-size-adjust:100%}:root{color-scheme:light;padding-top:env(safe
   .inv[data-occasion="wedding"] {
     background-image: radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, .55), transparent 60%), linear-gradient(rgba(235, 231, 223, .55), rgba(235, 231, 223, .55)), var(--linen-tex);
     background-size: auto, auto, 240px 240px;
+  }
+  /* soft watercolour washes behind the wedding page */
+  .inv[data-occasion="wedding"]:not([data-custom]) .page {
+    background-image: radial-gradient(ellipse 70% 260px at 0% 0%, rgba(125, 159, 195, .2), transparent 70%), radial-gradient(ellipse 60% 220px at 100% 6%, rgba(201, 162, 78, .13), transparent 70%),
+      radial-gradient(ellipse 70% 300px at 100% 100%, rgba(125, 159, 195, .18), transparent 70%), radial-gradient(ellipse 55% 240px at 0% 96%, rgba(134, 167, 155, .16), transparent 70%),
+      linear-gradient(180deg, rgba(255, 255, 255, .6), rgba(255, 255, 255, 0) 240px), var(--grain);
+    background-size: auto, auto, auto, auto, auto, 200px 200px; background-blend-mode: normal, normal, normal, normal, normal, multiply;
   }
   .inv[data-occasion="birthday"] {
     --script: "Parisienne", "Snell Roundhand", cursive;
@@ -338,6 +352,10 @@ html{-webkit-text-size-adjust:100%}:root{color-scheme:light;padding-top:env(safe
   .inv .opener.open .flap-w { transform: rotateX(180deg); z-index: 0; }
   .inv .opener.open .seal { opacity: 0; pointer-events: none; scale: .6; }
   .inv .opener.open .letter { visibility: visible; transform: translateY(-48%); }
+  /* Layers, back to front: envelope back, open flap, letter, pocket (sides and bottom), closed flap, seal.
+     The letter rises in front of the opened flap but its lower edge stays tucked inside the pocket. */
+  .inv .envelope .letter { z-index: 1; }
+  .inv .envelope .env-front, .inv .envelope .env-bottom-w { z-index: 2; }
 
   /* Gift opener (birthday, reveal) */
   .inv .gift { position: relative; aspect-ratio: 600 / 412; width: 82%; margin-inline: auto; cursor: pointer; border: 0; background: transparent; padding: 0; display: block; }
@@ -534,6 +552,11 @@ html{-webkit-text-size-adjust:100%}:root{color-scheme:light;padding-top:env(safe
   .inv[data-occasion="wedding"] .letter::before { content: ""; position: absolute; inset: 6px; border: 1px solid #c9a961; border-image: var(--gold) 1; pointer-events: none; }
   .inv[data-occasion="wedding"] .seal .art { filter: drop-shadow(0 2px 2px rgba(80, 55, 20, .4)); }
   .inv[data-occasion="wedding"] .link-btn { border-bottom: 1.5px solid #b48d45; border-image: var(--gold) 1; }
+  /* watercolour florals sit larger than the old paper flowers */
+  .inv[data-occasion="wedding"] .flora.c-left { width: 66%; left: -19%; bottom: -21%; }
+  .inv[data-occasion="wedding"] .flora.c-right { width: 62px; right: -7%; top: -30%; }
+  .inv[data-occasion="wedding"] .closing .envelope-still .flora { width: 104%; left: -2%; top: -17%; }
+  .inv[data-occasion="wedding"] .collage .flora.a { width: 52%; left: -12%; bottom: -8%; }
   /* wedding type: slightly larger small caps so the roman capitals stay easy to read */
   .inv[data-occasion="wedding"] .eyebrow { font-size: .76rem; letter-spacing: .26em; }
   .inv[data-occasion="wedding"] .link-btn { font-size: .82rem; letter-spacing: .2em; }
@@ -1004,6 +1027,10 @@ html{-webkit-text-size-adjust:100%}:root{color-scheme:light;padding-top:env(safe
 .art-seal{aspect-ratio:150/150;--img:url("art/seal.webp");background-image:var(--img)}
 .art-sprig{aspect-ratio:120/400;--img:url("art/sprig.webp");background-image:var(--img)}
 .art-strand{aspect-ratio:120/400;--img:url("art/strand.webp");background-image:var(--img)}
+.art-wc-cluster{aspect-ratio:800/960;--img:url("art/wc-cluster.webp");background-image:var(--img)}
+.art-wc-garland{aspect-ratio:1280/360;--img:url("art/wc-garland.webp");background-image:var(--img)}
+.art-wc-sprig{aspect-ratio:240/800;--img:url("art/wc-sprig.webp");background-image:var(--img)}
+.art-wc-strand{aspect-ratio:240/800;--img:url("art/wc-strand.webp");background-image:var(--img)}
 .art-xm-box-body{aspect-ratio:600/412;--img:url("art/xm-box-body.webp");background-image:var(--img)}
 .art-xm-box-lid{aspect-ratio:600/412;--img:url("art/xm-box-lid.webp");background-image:var(--img)}
 .art-xm-corner{aspect-ratio:400/520;--img:url("art/xm-corner.webp");background-image:var(--img)}

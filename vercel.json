@@ -1,0 +1,7 @@
+{
+  "buildCommand": null,
+  "framework": null,
+  "outputDirectory": "public",
+  "cleanUrls": false,
+  "rewrites": [{ "source": "/:name([a-z0-9-]{3,60})", "destination": "/index.html" }]
+}

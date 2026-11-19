@@ -72,6 +72,7 @@ html = '''<!doctype html>
 <script src="config.js?v=%s"></script>
 <script src="site.js?v=%s"></script>
 <script src="app.js?v=%s"></script>
+<script src="track.js" defer></script>
 </body>
 </html>
 ''' % (FONTS, v('app.css'), DEFS, v('config.js'), v('site.js'), v('app.js'))
